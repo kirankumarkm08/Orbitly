@@ -1,0 +1,105 @@
+import { Router, Request, Response } from 'express';
+import { supabaseAdmin } from '../config/supabase';
+import { asyncHandler, createError } from '../middleware/error.middleware';
+
+const router = Router();
+
+// POST /api/auth/login - Login with email/password
+router.post('/login', asyncHandler(async (req: Request, res: Response) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    throw createError('Email and password are required', 400);
+  }
+
+  const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  if (error) throw createError(error.message, 401);
+
+  // Get user profile
+  const { data: userProfile } = await supabaseAdmin
+    .from('users')
+    .select('*')
+    .eq('id', data.user.id)
+    .single();
+
+  res.json({
+    user: userProfile,
+    session: data.session,
+  });
+}));
+
+// POST /api/auth/register - Register new user
+router.post('/register', asyncHandler(async (req: Request, res: Response) => {
+  const { email, password, full_name } = req.body;
+
+  if (!email || !password) {
+    throw createError('Email and password are required', 400);
+  }
+
+  const { data, error } = await supabaseAdmin.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name },
+    },
+  });
+
+  if (error) throw createError(error.message, 400);
+
+  res.status(201).json({
+    message: 'Registration successful. Please check your email to verify your account.',
+    user: data.user,
+  });
+}));
+
+// POST /api/auth/logout - Logout
+router.post('/logout', asyncHandler(async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.split(' ')[1];
+    await supabaseAdmin.auth.signOut();
+  }
+
+  res.json({ message: 'Logged out successfully' });
+}));
+
+// POST /api/auth/refresh - Refresh token
+router.post('/refresh', asyncHandler(async (req: Request, res: Response) => {
+  const { refresh_token } = req.body;
+
+  if (!refresh_token) {
+    throw createError('Refresh token is required', 400);
+  }
+
+  const { data, error } = await supabaseAdmin.auth.refreshSession({
+    refresh_token,
+  });
+
+  if (error) throw createError(error.message, 401);
+
+  res.json({
+    session: data.session,
+  });
+}));
+
+// POST /api/auth/forgot-password - Request password reset
+router.post('/forgot-password', asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+
+  if (!email) {
+    throw createError('Email is required', 400);
+  }
+
+  const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email);
+
+  if (error) throw createError(error.message, 400);
+
+  res.json({ message: 'Password reset email sent' });
+}));
+
+export default router;
