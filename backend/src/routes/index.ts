@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import authRoutes from './auth.routes';
-import pagesRoutes from './pages.routes';
-import assetsRoutes from './assets.routes';
-import eventsRoutes from './events.routes';
-import speakersRoutes from './speakers.routes';
-import registrationsRoutes from './registrations.routes';
-import templatesRoutes from './templates.routes';
+import authRoutes from './auth.routes.js';
+import pagesRoutes from './pages.routes.js';
+import assetsRoutes from './assets.routes.js';
+import eventsRoutes from './events.routes.js';
+import speakersRoutes from './speakers.routes.js';
+import registrationsRoutes from './registrations.routes.js';
+import templatesRoutes from './templates.routes.js';
+import adminRoutes from './admin.routes.js';
 
 const router = Router();
 
@@ -17,5 +18,6 @@ router.use('/events', eventsRoutes);
 router.use('/speakers', speakersRoutes);
 router.use('/registrations', registrationsRoutes);
 router.use('/templates', templatesRoutes);
+router.use('/admin', adminRoutes);
 
 export default router;

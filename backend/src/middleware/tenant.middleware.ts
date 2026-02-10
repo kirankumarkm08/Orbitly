@@ -1,12 +1,25 @@
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
+import { supabaseAdmin } from '../config/supabase.js';
 
 // Ensures tenant_id is present for protected routes
-export const tenantMiddleware = (
+export const tenantMiddleware = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
+  // If tenantId is missing, check if we can provide a default for super admins
   if (!req.tenantId) {
+    if (req.user?.role === 'super_admin') {
+      console.warn('TenantMiddleware: Super admin accessing tenant route without tenantId. Finding default...');
+      // Try to find the first tenant as a fallback
+      const { data: tenants } = await supabaseAdmin.from('tenants').select('id').limit(1);
+      if (tenants && tenants.length > 0 && tenants[0]) {
+        req.tenantId = tenants[0].id;
+        console.log('TenantMiddleware: Assigned default tenantId:', req.tenantId);
+        return next();
+      }
+    }
+
     return res.status(403).json({ 
       error: 'No tenant associated with this user',
       code: 'NO_TENANT'

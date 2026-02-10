@@ -1,0 +1,19 @@
+{
+  "name": "mcp-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "ts-node src/index.ts",
+    "build": "tsc -p .",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.0",
+    "ts-node": "^10.9.1",
+    "@types/node": "^20.0.0"
+  }
+}

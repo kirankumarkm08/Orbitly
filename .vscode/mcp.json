@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "minimal-saas-mcp": {
+      "type": "stdio",
+      "command": "npm",
+      "args": ["--prefix", "mcp-server", "run", "dev"]
+    }
+  }
+}

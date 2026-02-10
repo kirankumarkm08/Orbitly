@@ -2,11 +2,13 @@
   "name": "backend",
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "main": "index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "setup:admin": "ts-node src/setup-admin.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -27,5 +29,9 @@
     "@types/node": "^25.2.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
+  },
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
   }
 }

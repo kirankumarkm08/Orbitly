@@ -1,10 +1,11 @@
-import { Router, Request, Response } from 'express';
-import { supabaseAdmin } from '../config/supabase';
-import { asyncHandler, createError } from '../middleware/error.middleware';
-import { authMiddleware, optionalAuth } from '../middleware/auth.middleware';
-import { tenantMiddleware } from '../middleware/tenant.middleware';
+import express from 'express';
+import type { Request, Response } from 'express';
+import { supabaseAdmin } from '../config/supabase.js';
+import { asyncHandler, createError } from '../middleware/error.middleware.js';
+import { authMiddleware, optionalAuth } from '../middleware/auth.middleware.js';
+import { tenantMiddleware } from '../middleware/tenant.middleware.js';
 
-const router = Router();
+const router = express.Router();
 
 // GET /api/events/public/:slug - Public event page (no auth required)
 router.get('/public/:slug', optionalAuth, asyncHandler(async (req: Request, res: Response) => {

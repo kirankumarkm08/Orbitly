@@ -15,7 +15,7 @@ export interface User {
   email: string;
   full_name: string | null;
   avatar_url: string | null;
-  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  role: 'owner' | 'admin' | 'editor' | 'viewer' | 'super_admin';
   created_at: string;
   updated_at: string;
 }

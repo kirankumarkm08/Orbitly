@@ -1,8 +1,9 @@
-import { Router, Request, Response } from 'express';
-import { supabaseAdmin } from '../config/supabase';
-import { asyncHandler, createError } from '../middleware/error.middleware';
+import express from 'express';
+import type { Request, Response } from 'express';
+import { supabaseAdmin } from '../config/supabase.js';
+import { asyncHandler, createError } from '../middleware/error.middleware.js';
 
-const router = Router();
+const router = express.Router();
 
 // POST /api/auth/login - Login with email/password
 router.post('/login', asyncHandler(async (req: Request, res: Response) => {
@@ -25,6 +26,10 @@ router.post('/login', asyncHandler(async (req: Request, res: Response) => {
     .select('*')
     .eq('id', data.user.id)
     .single();
+
+  if (!userProfile) {
+    console.error('Failed to fetch user profile for ID:', data.user.id);
+  }
 
   res.json({
     user: userProfile,

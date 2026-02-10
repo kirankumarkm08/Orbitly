@@ -1,8 +1,9 @@
-import express, { Request, Response } from 'express';
+import express from 'express';
+import type { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import routes from './routes';
-import { errorHandler, notFoundHandler } from './middleware/error.middleware';
+import routes from './routes/index.js';
+import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 
 // Load environment variables
 dotenv.config();
@@ -12,7 +13,7 @@ const port = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:3001', process.env.CORS_ORIGIN].filter(Boolean) as string[],
   credentials: true,
 }));
 app.use(express.json({ limit: '10mb' }));
