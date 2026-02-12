@@ -1,0 +1,102 @@
+/* HMR Trigger 1739304300 */
+@import "tailwindcss";
+
+@theme {
+  /* ===== Brand Color Palette ===== */
+
+  /* Primary (Teal/Blue brand) */
+  --color-primary-100: #DCEFF4;
+  --color-primary-300: #7FB6C7;
+  --color-primary-400: #5C9EB4;
+  --color-primary-500: #3E839B;
+  --color-primary: #2F6F86;       /* 600 — main brand action */
+  --color-primary-foreground: #FFFFFF;
+
+  /* Backgrounds */
+  --color-background: #4F8DA4;    /* outer app wrapper */
+  --color-surface: #F3F5F6;       /* main container */
+  --color-card: #FFFFFF;
+  --color-card-foreground: #111111;
+  --color-muted: #F8FAFB;
+  --color-muted-foreground: #8E9AA3;
+
+  /* Popover inherits card */
+  --color-popover: #FFFFFF;
+  --color-popover-foreground: #111111;
+
+  /* Text */
+  --color-foreground: #111111;
+  --color-secondary: #F3F5F6;
+  --color-secondary-foreground: #5F6B73;
+
+  /* Borders */
+  --color-border: #E5E9EC;
+  --color-border-divider: #DDE3E7;
+  --color-input: #E5E9EC;
+  --color-ring: #2F6F86;
+
+  /* Accent */
+  --color-accent: #F3F5F6;
+  --color-accent-foreground: #111111;
+
+  /* Status */
+  --color-success: #22C55E;
+  --color-destructive: #EF4444;
+  --color-warning: #F59E0B;
+  --color-destructive-foreground: #FFFFFF;
+
+  /* Dark Button */
+  --color-darkbtn: #0F172A;
+  --color-darkbtn-hover: #1E293B;
+
+  /* Radii */
+  --radius-lg: 0.75rem;
+  --radius-md: calc(0.75rem - 2px);
+  --radius-sm: calc(0.75rem - 4px);
+
+  /* Fonts */
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  /* Animations */
+  @keyframes enter {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes exit {
+    from { opacity: 1; transform: scale(1); }
+    to { opacity: 0; transform: scale(0.95); }
+  }
+  --animate-enter: enter 0.2s ease-out;
+  --animate-exit: exit 0.15s ease-in;
+}
+
+/* Base Styles */
+:root {
+  color-scheme: light;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
+
+/* Utility Classes */
+@layer utilities {
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg border border-border;
+  }
+
+  .glass-card {
+    @apply bg-white backdrop-blur-xl border border-border shadow-sm;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-400;
+  }
+
+  .glow {
+    box-shadow: 0 0 20px -5px var(--color-primary);
+  }
+}
