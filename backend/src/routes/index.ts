@@ -7,10 +7,12 @@ import speakersRoutes from './speakers.routes.js';
 import registrationsRoutes from './registrations.routes.js';
 import templatesRoutes from './templates.routes.js';
 import adminRoutes from './admin.routes.js';
+import publicRoutes from './public.routes.js';
 
 const router = Router();
 
 // Mount routes
+router.use('/public', publicRoutes);
 router.use('/auth', authRoutes);
 router.use('/pages', pagesRoutes);
 router.use('/assets', assetsRoutes);

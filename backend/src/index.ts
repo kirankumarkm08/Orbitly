@@ -1,6 +1,7 @@
 import express from 'express';
 import type { Request, Response } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import dotenv from 'dotenv';
 import routes from './routes/index.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
@@ -12,6 +13,7 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
+app.use(helmet());
 app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001', process.env.CORS_ORIGIN].filter(Boolean) as string[],
   credentials: true,
