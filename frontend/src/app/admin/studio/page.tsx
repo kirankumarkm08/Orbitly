@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { Loader2, Save, Eye, Settings, Image as ImageIcon, Globe, FileText, Bug } from 'lucide-react';
@@ -26,6 +26,17 @@ const GrapesEditor = dynamic(
   }
 );
 
+function StudioLoading() {
+  return (
+    <div className="h-screen flex items-center justify-center bg-[#f8fafc]">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <p className="text-sm text-gray-500">Loading studio...</p>
+      </div>
+    </div>
+  );
+}
+
 interface PageData {
   html: string;
   css: string;
@@ -40,7 +51,7 @@ interface PageMetadata {
   status: 'draft' | 'published';
 }
 
-export default function StudioPage() {
+function StudioPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pageId = searchParams.get('id');
@@ -507,5 +518,13 @@ export default function StudioPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function StudioPage() {
+  return (
+    <Suspense fallback={<StudioLoading />}>
+      <StudioPageContent />
+    </Suspense>
   );
 }
