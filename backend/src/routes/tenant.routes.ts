@@ -28,7 +28,7 @@ router.get('/resolve-tenant', asyncHandler(async (req: Request, res: Response) =
   res.json({
     tenant_id: data.tenant_id,
     tenant: data.tenant,
-  }));
+  });
 }));
 
 export default router;
