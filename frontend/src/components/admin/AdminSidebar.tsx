@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, 
   Users, 
@@ -13,10 +13,12 @@ import {
   FileText,
   MessageSquare,
   Calendar,
-  Sparkles,
-  MousePointer2
+  Sparkles
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { authApi } from '@/lib/api';
+import { getSupabaseClient } from '@/lib/supabase/client';
+import type { User } from '@supabase/supabase-js';
 
 const navGroups = [
   {
@@ -51,8 +53,35 @@ const navGroups = [
   }
 ];
 
+function getInitials(user: User | null): string {
+  if (!user) return '?';
+  const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email;
+  if (!name) return user.email?.slice(0, 2).toUpperCase() || '?';
+  if (typeof name === 'string' && name.includes(' ')) {
+    return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+  }
+  return String(name).slice(0, 2).toUpperCase();
+}
+
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const supabase = getSupabaseClient();
+    supabase.auth.getSession().then(({ data: { session } }) => setUser(session?.user ?? null));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) =>
+      setUser(session?.user ?? null)
+    );
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    await authApi.logout();
+    router.push('/login');
+    router.refresh();
+  };
 
   return (
     <div className="flex h-screen w-64 flex-col bg-white border-r border-border">
@@ -101,15 +130,20 @@ export default function AdminSidebar() {
       {/* User Info */}
       <div className="border-t border-border p-4">
         <div className="flex items-center gap-3 rounded-lg bg-accent p-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary">
-            <span className="text-sm font-bold text-foreground">SA</span>
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <span className="text-sm font-bold">{getInitials(user)}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate">Super Admin</p>
-            <p className="text-xs text-muted-foreground truncate">admin@example.com</p>
+            <p className="text-sm font-medium text-foreground truncate">
+              {user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email || 'Admin'}
+            </p>
+            <p className="text-xs text-muted-foreground truncate">{user?.email || '—'}</p>
           </div>
         </div>
-        <button className="mt-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary-foreground hover:bg-accent hover:text-foreground transition-all">
+        <button
+          onClick={handleLogout}
+          className="mt-3 flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-secondary-foreground hover:bg-accent hover:text-foreground transition-all"
+        >
           <LogOut className="h-4 w-4" />
           Logout
         </button>

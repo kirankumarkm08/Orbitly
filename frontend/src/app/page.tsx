@@ -1,16 +1,42 @@
 import Link from "next/link";
 import PageRenderer from "@/components/PageRenderer";
 import { ArrowRight, Zap, Shield, Sparkles } from "lucide-react";
+import { headers } from "next/headers";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || '';
 
-async function getHomepage() {
+async function getTenantFromRequest() {
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  
+  // For localhost or simple hostnames, use env variable
+  if (host === 'localhost') {
+    return process.env.NEXT_PUBLIC_TENANT_ID || '';
+  }
+  
+  // In production, extract tenant from subdomain
+  const parts = host.split('.');
+  if (parts.length >= 3) {
+    const subdomain = parts[0];
+    const tenantMap: Record<string, string> = {
+      'demo': process.env.NEXT_PUBLIC_TENANT_ID || '',
+      // Add more subdomains here
+    };
+    return tenantMap[subdomain] || '';
+  }
+  
+  return process.env.NEXT_PUBLIC_TENANT_ID || '';
+}
+
+async function getHomepage(tenantId: string) {
   try {
-    const res = await fetch(
-      `${API_URL}/public/pages/homepage?tenant_id=${TENANT_ID}`,
-      { next: { revalidate: 60 } }
-    );
+    const url = `${API_URL}/public/pages/homepage?tenant_id=${tenantId}`;
+    
+    const res = await fetch(url, { 
+      next: { revalidate: 0 },
+      cache: 'no-store'
+    });
+    
     if (!res.ok) return null;
     return res.json();
   } catch {
@@ -19,18 +45,22 @@ async function getHomepage() {
 }
 
 export default async function Home() {
-  const homepage = await getHomepage();
-
-  // If a homepage is published, render it
-  if (homepage?.html) {
-    return (
-      <PageRenderer
-        html={homepage.html}
-        css={homepage.css || ''}
-        meta_title={homepage.meta_title}
-        meta_description={homepage.meta_description}
-      />
-    );
+  const tenantId = await getTenantFromRequest();
+  
+  // If tenant is configured, try to get their homepage
+  if (tenantId) {
+    const homepage = await getHomepage(tenantId);
+    
+    if (homepage?.html) {
+      return (
+        <PageRenderer
+          html={homepage.html}
+          css={homepage.css || ''}
+          meta_title={homepage.meta_title}
+          meta_description={homepage.meta_description}
+        />
+      );
+    }
   }
 
   // Fallback: static landing page

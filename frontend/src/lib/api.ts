@@ -12,13 +12,30 @@ class ApiClient {
   private async getAuthHeader(): Promise<Record<string, string>> {
     const supabase = getSupabaseClient();
     const { data: { session } } = await supabase.auth.getSession();
-    
-    console.log('[ApiClient] Session:', session);
     if (session?.access_token) {
-      console.log('[ApiClient] Token sent:', session.access_token);
       return { Authorization: `Bearer ${session.access_token}` };
     }
-    console.log('[ApiClient] No session found');
+    return {};
+  }
+
+  // Get tenant ID from logged-in user's metadata
+  private async getTenantHeader(): Promise<Record<string, string>> {
+    const supabase = getSupabaseClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Tenant ID is stored in user metadata after login
+    const tenantId = user?.user_metadata?.tenant_id;
+    
+    if (tenantId) {
+      return { 'X-Tenant-Id': tenantId };
+    }
+    
+    // Fallback to env variable for public routes
+    const envTenantId = process.env.NEXT_PUBLIC_TENANT_ID;
+    if (envTenantId) {
+      return { 'X-Tenant-Id': envTenantId };
+    }
+    
     return {};
   }
 
@@ -26,20 +43,30 @@ class ApiClient {
     const { method = 'GET', body, headers = {} } = options;
     
     const authHeaders = await this.getAuthHeader();
+    const tenantHeaders = await this.getTenantHeader();
     
     const response = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers: {
         'Content-Type': 'application/json',
         ...authHeaders,
+        ...tenantHeaders,
         ...headers,
       },
       body: body ? JSON.stringify(body) : undefined,
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'Request failed' }));
-      throw new Error(error.error || `Request failed with status ${response.status}`);
+      let errorMessage = `Request failed with status ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+      } catch (e) {
+        // If JSON parsing fails, use status text
+        errorMessage = response.statusText || errorMessage;
+      }
+      console.error('API Error:', errorMessage, 'Status:', response.status);
+      throw new Error(errorMessage);
     }
 
     // Handle 204 No Content
@@ -70,6 +97,7 @@ class ApiClient {
   // File upload
   async upload(endpoint: string, file: File, additionalData?: Record<string, string>) {
     const authHeaders = await this.getAuthHeader();
+    const tenantHeaders = await this.getTenantHeader();
     const formData = new FormData();
     formData.append('file', file);
     
@@ -81,7 +109,10 @@ class ApiClient {
 
     const response = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
-      headers: authHeaders,
+      headers: {
+        ...authHeaders,
+        ...tenantHeaders,
+      },
       body: formData,
     });
 
@@ -98,7 +129,6 @@ export const api = new ApiClient();
 
 // ============ API Functions ============
 
-// Auth
 // Auth
 export const authApi = {
   login: async (email: string, password: string) => {
@@ -119,10 +149,28 @@ export const authApi = {
     if (error) throw error;
     return data;
   },
+  signInWithGoogle: async (redirectTo = '/admin/studio') => {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}` : undefined,
+      },
+    });
+    if (error) throw error;
+    return data;
+  },
   logout: async () => {
     const supabase = getSupabaseClient();
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
+  },
+  // Get current user with tenant info
+  getCurrentUser: async () => {
+    const supabase = getSupabaseClient();
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return user;
   },
 };
 
@@ -185,16 +233,15 @@ export const templatesApi = {
 };
 
 // Public Pages (no auth required - for end-user rendering)
-const TENANT_ID = process.env.NEXT_PUBLIC_TENANT_ID || '';
-
+// These use query params since they're accessed by visitors
 export const publicPagesApi = {
-  getHomepage: async () => {
-    const res = await fetch(`${API_URL}/public/pages/homepage?tenant_id=${TENANT_ID}`);
+  getHomepage: async (tenantId: string) => {
+    const res = await fetch(`${API_URL}/public/pages/homepage?tenant_id=${tenantId}`);
     if (!res.ok) return null;
     return res.json();
   },
-  getBySlug: async (slug: string) => {
-    const res = await fetch(`${API_URL}/public/pages/${slug}?tenant_id=${TENANT_ID}`);
+  getBySlug: async (slug: string, tenantId: string) => {
+    const res = await fetch(`${API_URL}/public/pages/${slug}?tenant_id=${tenantId}`);
     if (!res.ok) return null;
     return res.json();
   },

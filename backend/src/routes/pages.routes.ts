@@ -39,9 +39,15 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
 
 // POST /api/pages - Create new page
 router.post('/', asyncHandler(async (req: Request, res: Response) => {
-  const { name, slug, description, html, css, components, styles, meta_title, meta_description } = req.body;
+  console.log('[PagesAPI] POST /api/pages - Request received');
+  console.log('[PagesAPI] Tenant ID:', req.tenantId);
+  console.log('[PagesAPI] User:', req.user?.id);
+  console.log('[PagesAPI] Request body:', req.body);
+  
+  const { name, slug, description, html, css, components, styles, status, meta_title, meta_description, favicon_url } = req.body;
 
   if (!name || !slug) {
+    console.log('[PagesAPI] Validation failed: Name or slug missing');
     throw createError('Name and slug are required', 400);
   }
 
@@ -58,8 +64,10 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
       css,
       components: components || [],
       styles: styles || [],
+      status: status || 'draft',
       meta_title,
       meta_description,
+      favicon_url,
       created_by: req.user?.id,
       updated_by: req.user?.id,
     })
@@ -78,8 +86,13 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
 
 // PUT /api/pages/:id - Update page
 router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
+  console.log('[PagesAPI] PUT /api/pages/:id - Request received');
+  console.log('[PagesAPI] Page ID:', req.params.id);
+  console.log('[PagesAPI] Tenant ID:', req.tenantId);
+  console.log('[PagesAPI] Request body:', req.body);
+  
   const { id } = req.params;
-  const { name, slug, description, html, css, components, styles, status, meta_title, meta_description, is_homepage } = req.body;
+  const { name, slug, description, html, css, components, styles, status, meta_title, meta_description, favicon_url, is_homepage } = req.body;
 
   const { data, error } = await supabaseAdmin
     .from('pages')
@@ -94,6 +107,7 @@ router.put('/:id', asyncHandler(async (req: Request, res: Response) => {
       status,
       meta_title,
       meta_description,
+      favicon_url,
       is_homepage,
       updated_by: req.user?.id,
     })

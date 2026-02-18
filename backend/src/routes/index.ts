@@ -8,11 +8,13 @@ import registrationsRoutes from './registrations.routes.js';
 import templatesRoutes from './templates.routes.js';
 import adminRoutes from './admin.routes.js';
 import publicRoutes from './public.routes.js';
+import tenantRoutes from './tenant.routes.js';
 
 const router = Router();
 
 // Mount routes
 router.use('/public', publicRoutes);
+router.use('/public', tenantRoutes);
 router.use('/auth', authRoutes);
 router.use('/pages', pagesRoutes);
 router.use('/assets', assetsRoutes);
