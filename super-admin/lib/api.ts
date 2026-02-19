@@ -33,6 +33,13 @@ export const api = {
     body: JSON.stringify(credentials),
   }),
   
+  // Public - Onboarding
+  onboarding: (data: { email: string; password: string; full_name: string; niche: string; domain: string }) =>
+    apiRequest<{ message: string; tenant: any; user: any }>('/public/onboarding', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+  
   // Dashboard
   getStats: () => apiRequest<any>('/admin/stats'),
   
