@@ -1,0 +1,792 @@
+{
+  "info": {
+    "_postman_id": "orbitly-api-collection",
+    "name": "Orbitly API - Multi-Environment",
+    "description": "Complete API collection for Orbitly with Super Admin and Tenant User environments",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "1. Super Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"your-super-admin-password\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as Super Admin. Token will be auto-saved to super_admin_token variable."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.session && jsonData.session.access_token) {",
+                  "    pm.environment.set(\"super_admin_token\", jsonData.session.access_token);",
+                  "    pm.environment.set(\"super_admin_refresh\", jsonData.session.refresh_token);",
+                  "    console.log(\"✅ Super Admin token saved\");",
+                  "} else {",
+                  "    console.log(\"❌ No token in response\");",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. Register New User",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"userpassword123\",\n  \"full_name\": \"Test User\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/register",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "register"]
+            },
+            "description": "Register a new regular user. Save the user ID for assigning to tenant."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.user && jsonData.user.id) {",
+                  "    pm.environment.set(\"new_user_id\", jsonData.user.id);",
+                  "    console.log(\"✅ New user ID saved: \" + jsonData.user.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "3. Tenant User Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"userpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            },
+            "description": "Login as regular tenant user. Token and tenant_id will be auto-saved."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.session && jsonData.session.access_token) {",
+                  "    pm.environment.set(\"tenant_token\", jsonData.session.access_token);",
+                  "    pm.environment.set(\"tenant_refresh\", jsonData.session.refresh_token);",
+                  "    console.log(\"✅ Tenant token saved\");",
+                  "}",
+                  "if (jsonData.user && jsonData.user.tenant_id) {",
+                  "    pm.environment.set(\"tenant_id\", jsonData.user.tenant_id);",
+                  "    console.log(\"✅ Tenant ID saved: \" + jsonData.user.tenant_id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "4. Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{tenant_refresh}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
+          "name": "5. Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "👑 Super Admin - Tenants",
+      "item": [
+        {
+          "name": "List All Tenants",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/tenants",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tenants"]
+            },
+            "description": "Get all tenants. Requires Super Admin token."
+          }
+        },
+        {
+          "name": "Create New Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Tenant\",\n  \"slug\": \"demo-tenant\",\n  \"niche\": \"static\",\n  \"settings\": {\n    \"features\": {\n      \"enabledModules\": [\"pages\", \"blog\", \"media\"]\n    }\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tenants",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tenants"]
+            },
+            "description": "Create a new tenant. Niche options: static, ecommerce, events, launchpad. Modules are auto-generated based on niche."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"created_tenant_id\", jsonData.id);",
+                  "    console.log(\"✅ Created tenant ID saved: \" + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Tenant Modules",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/tenants/{{tenant_id}}/modules",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tenants", "{{tenant_id}}", "modules"]
+            }
+          }
+        },
+        {
+          "name": "Toggle Tenant Module",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_enabled\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/tenants/{{tenant_id}}/modules/pages",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tenants", "{{tenant_id}}", "modules", "pages"]
+            }
+          }
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/tenants/{{tenant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "tenants", "{{tenant_id}}"]
+            },
+            "description": "⚠️ Permanently delete a tenant and all its data."
+          }
+        }
+      ],
+      "description": "Super Admin only endpoints for managing tenants"
+    },
+    {
+      "name": "👥 Super Admin - Users",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/users",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users"]
+            }
+          }
+        },
+        {
+          "name": "Assign User to Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{new_user_id}}/assign-tenant",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "{{new_user_id}}", "assign-tenant"]
+            },
+            "description": "Assign a user to a specific tenant. User will then have access to that tenant's data."
+          }
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{super_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/admin/users/{{new_user_id}}/role",
+              "host": ["{{base_url}}"],
+              "path": ["admin", "users", "{{new_user_id}}", "role"]
+            },
+            "description": "Update user role. Options: user, admin, super_admin"
+          }
+        }
+      ],
+      "description": "Super Admin only endpoints for managing users"
+    },
+    {
+      "name": "📄 Tenant - Pages",
+      "item": [
+        {
+          "name": "List All Pages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pages",
+              "host": ["{{base_url}}"],
+              "path": ["pages"]
+            },
+            "description": "List all pages for the current tenant. Requires tenant_token and x-tenant-id header."
+          }
+        },
+        {
+          "name": "Get Single Page",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pages/{{page_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["pages", "{{page_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Page",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Home Page\",\n  \"slug\": \"home\",\n  \"description\": \"Main landing page\",\n  \"status\": \"draft\",\n  \"components\": [],\n  \"styles\": []\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pages",
+              "host": ["{{base_url}}"],
+              "path": ["pages"]
+            },
+            "description": "Create a new page. Status can be: draft, published."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"page_id\", jsonData.id);",
+                  "    console.log(\"✅ Page ID saved: \" + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update Page",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Home Page\",\n  \"description\": \"Updated description\",\n  \"html\": \"<h1>Welcome</h1>\",\n  \"css\": \"h1 { color: blue; }\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/pages/{{page_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["pages", "{{page_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Page",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pages/{{page_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["pages", "{{page_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Publish Page",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pages/{{page_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["pages", "{{page_id}}", "publish"]
+            },
+            "description": "Publish a page to make it publicly accessible."
+          }
+        }
+      ],
+      "description": "Page management endpoints for tenant users"
+    },
+    {
+      "name": "🎉 Tenant - Events",
+      "item": [
+        {
+          "name": "List All Events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events?status=published",
+              "host": ["{{base_url}}"],
+              "path": ["events"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "published",
+                  "description": "Filter by status: draft, published, archived"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tech Conference 2024\",\n  \"slug\": \"tech-conference-2024\",\n  \"description\": \"Annual technology conference\",\n  \"start_date\": \"2024-12-15T09:00:00Z\",\n  \"end_date\": \"2024-12-17T18:00:00Z\",\n  \"timezone\": \"America/New_York\",\n  \"location_type\": \"hybrid\",\n  \"venue_name\": \"Convention Center\",\n  \"venue_address\": \"123 Main St, City\",\n  \"virtual_url\": \"https://zoom.us/j/example\",\n  \"registration_enabled\": true,\n  \"max_attendees\": 500,\n  \"ticket_price\": 199,\n  \"currency\": \"USD\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/events",
+              "host": ["{{base_url}}"],
+              "path": ["events"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id) {",
+                  "    pm.environment.set(\"event_id\", jsonData.id);",
+                  "    console.log(\"✅ Event ID saved: \" + jsonData.id);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Event Details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events/{{event_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["events", "{{event_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Publish Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/events/{{event_id}}/publish",
+              "host": ["{{base_url}}"],
+              "path": ["events", "{{event_id}}", "publish"]
+            }
+          }
+        }
+      ],
+      "description": "Event management endpoints (requires events module)"
+    },
+    {
+      "name": "🎤 Tenant - Speakers",
+      "item": [
+        {
+          "name": "List Speakers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/speakers",
+              "host": ["{{base_url}}"],
+              "path": ["speakers"]
+            }
+          }
+        },
+        {
+          "name": "Create Speaker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{tenant_token}}"
+              },
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"bio\": \"Expert in technology and innovation\",\n  \"title\": \"CTO\",\n  \"company\": \"Tech Corp\",\n  \"avatar_url\": \"https://example.com/avatar.jpg\",\n  \"social_links\": {\n    \"twitter\": \"@johndoe\",\n    \"linkedin\": \"linkedin.com/in/johndoe\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/speakers",
+              "host": ["{{base_url}}"],
+              "path": ["speakers"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌍 Public Endpoints",
+      "item": [
+        {
+          "name": "Get Public Homepage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/public/pages/homepage",
+              "host": ["{{base_url}}"],
+              "path": ["public", "pages", "homepage"]
+            },
+            "description": "Get published homepage for a tenant. No authentication required."
+          }
+        },
+        {
+          "name": "Get Public Page by Slug",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-tenant-id",
+                "value": "{{tenant_id}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/public/pages/about",
+              "host": ["{{base_url}}"],
+              "path": ["public", "pages", "about"]
+            },
+            "description": "Get any published page by its slug. No authentication required."
+          }
+        },
+        {
+          "name": "Get Public Event",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/events/public/tech-conference-2024",
+              "host": ["{{base_url}}"],
+              "path": ["events", "public", "tech-conference-2024"]
+            },
+            "description": "Get public event details. No authentication required."
+          }
+        },
+        {
+          "name": "Resolve Tenant by Domain",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/resolve-tenant?domain=demo.orbitly.com",
+              "host": ["{{base_url}}"],
+              "path": ["public", "resolve-tenant"],
+              "query": [
+                {
+                  "key": "domain",
+                  "value": "demo.orbitly.com"
+                }
+              ]
+            },
+            "description": "Get tenant info by domain. Useful for multi-tenant apps."
+          }
+        }
+      ],
+      "description": "Public endpoints that don't require authentication"
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://orbitly.onrender.com/api",
+      "type": "string"
+    }
+  ]
+}

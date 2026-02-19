@@ -1,273 +1,825 @@
 {
-	"info": {
-		"_postman_id": "0d4085bb-0962-45ee-8055-f6459d2c5278",
-		"name": "SaaS Page Builder API",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Auth",
-			"item": [
-				{
-					"name": "Login",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Register",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"email\": \"newuser@example.com\",\n    \"password\": \"password123\",\n    \"full_name\": \"New User\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/auth/register",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"register"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Logout",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/auth/logout",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"auth",
-								"logout"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Pages",
-			"item": [
-				{
-					"name": "List Pages",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/pages",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"pages"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Page",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/pages/:id",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"pages",
-								":id"
-							],
-							"variable": [
-								{
-									"key": "id",
-									"value": ""
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Page",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Landing Page\",\n    \"slug\": \"landing-page\",\n    \"description\": \"Main landing page\",\n    \"html\": \"<div>Hello World</div>\",\n    \"css\": \"div { color: red; }\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/pages",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"pages"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Events",
-			"item": [
-				{
-					"name": "List Events",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/events",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"events"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Public Event",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/events/public/:slug",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"events",
-								"public",
-								":slug"
-							],
-							"variable": [
-								{
-									"key": "slug",
-									"value": "example-event"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Create Event",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n    \"name\": \"Tech Conference 2024\",\n    \"slug\": \"tech-conf-2024\",\n    \"start_date\": \"2024-10-01T09:00:00Z\",\n    \"end_date\": \"2024-10-02T17:00:00Z\",\n    \"timezone\": \"UTC\",\n    \"location_type\": \"hybrid\",\n    \"registration_enabled\": true\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/events",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"events"
-							]
-						}
-					},
-					"response": []
-				}
-			]
-		}
-	],
-	"auth": {
-		"type": "bearer",
-		"bearer": [
-			{
-				"key": "token",
-				"value": "{{authToken}}",
-				"type": "string"
-			}
-		]
-	},
-	"event": [
-		{
-			"listen": "prerequest",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		},
-		{
-			"listen": "test",
-			"script": {
-				"type": "text/javascript",
-				"exec": [
-					""
-				]
-			}
-		}
-	],
-	"variable": [
-		{
-			"key": "baseUrl",
-			"value": "https://orbitly.onrender.com/api",
-			"type": "string"
-		},
-		{
-			"key": "authToken",
-			"value": "",
-			"type": "string"
-		}
-	]
+  "info": {
+    "_postman_id": "orbitly-complete-api",
+    "name": "Orbitly API - Complete Collection",
+    "description": "Complete API collection for Orbitly with all endpoints including Super Admin, Tenant Admin, and Public APIs",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🔐 Authentication",
+      "item": [
+        {
+          "name": "1. Super Admin Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"your-super-admin-password\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.session && jsonData.session.access_token) {",
+                "    pm.environment.set(\"super_admin_token\", jsonData.session.access_token);",
+                "    pm.environment.set(\"super_admin_refresh\", jsonData.session.refresh_token);",
+                "    console.log(\"✅ Super Admin token saved\");",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "2. Register New User",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"userpassword123\",\n  \"full_name\": \"Test User\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/auth/register", "host": ["{{base_url}}"], "path": ["auth", "register"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.user && jsonData.user.id) {",
+                "    pm.environment.set(\"new_user_id\", jsonData.user.id);",
+                "    console.log(\"✅ New user ID saved: \" + jsonData.user.id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "3. Tenant User Login",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"userpassword123\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.session && jsonData.session.access_token) {",
+                "    pm.environment.set(\"tenant_token\", jsonData.session.access_token);",
+                "    pm.environment.set(\"tenant_refresh\", jsonData.session.refresh_token);",
+                "    console.log(\"✅ Tenant token saved\");",
+                "}",
+                "if (jsonData.user && jsonData.user.tenant_id) {",
+                "    pm.environment.set(\"tenant_id\", jsonData.user.tenant_id);",
+                "    console.log(\"✅ Tenant ID saved: \" + jsonData.user.tenant_id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "4. Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{tenant_refresh}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/auth/refresh", "host": ["{{base_url}}"], "path": ["auth", "refresh"]}
+          }
+        },
+        {
+          "name": "5. Logout",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Authorization", "value": "Bearer {{tenant_token}}"}],
+            "url": {"raw": "{{base_url}}/auth/logout", "host": ["{{base_url}}"], "path": ["auth", "logout"]}
+          }
+        },
+        {
+          "name": "6. Forgot Password",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/auth/forgot-password", "host": ["{{base_url}}"], "path": ["auth", "forgot-password"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "👑 Super Admin - Tenants",
+      "item": [
+        {
+          "name": "List All Tenants",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{super_admin_token}}"}],
+            "url": {"raw": "{{base_url}}/admin/tenants", "host": ["{{base_url}}"], "path": ["admin", "tenants"]}
+          }
+        },
+        {
+          "name": "Create New Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{super_admin_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Demo Tenant\",\n  \"slug\": \"demo-tenant\",\n  \"niche\": \"static\",\n  \"settings\": {\n    \"features\": {\n      \"enabledModules\": [\"pages\", \"blog\", \"media\"]\n    }\n  }\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/admin/tenants", "host": ["{{base_url}}"], "path": ["admin", "tenants"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.id) {",
+                "    pm.environment.set(\"created_tenant_id\", jsonData.id);",
+                "    console.log(\"✅ Created tenant ID saved: \" + jsonData.id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "Get Tenant Modules",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{super_admin_token}}"}],
+            "url": {"raw": "{{base_url}}/admin/tenants/{{tenant_id}}/modules", "host": ["{{base_url}}"], "path": ["admin", "tenants", "{{tenant_id}}", "modules"]}
+          }
+        },
+        {
+          "name": "Toggle Tenant Module",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{super_admin_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"is_enabled\": true\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/admin/tenants/{{tenant_id}}/modules/pages", "host": ["{{base_url}}"], "path": ["admin", "tenants", "{{tenant_id}}", "modules", "pages"]}
+          }
+        },
+        {
+          "name": "Delete Tenant",
+          "request": {
+            "method": "DELETE",
+            "header": [{"key": "Authorization", "value": "Bearer {{super_admin_token}}"}],
+            "url": {"raw": "{{base_url}}/admin/tenants/{{tenant_id}}", "host": ["{{base_url}}"], "path": ["admin", "tenants", "{{tenant_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "👥 Super Admin - Users",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "Authorization", "value": "Bearer {{super_admin_token}}"}],
+            "url": {"raw": "{{base_url}}/admin/users", "host": ["{{base_url}}"], "path": ["admin", "users"]}
+          }
+        },
+        {
+          "name": "Assign User to Tenant",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{super_admin_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tenant_id\": \"{{tenant_id}}\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/admin/users/{{new_user_id}}/assign-tenant", "host": ["{{base_url}}"], "path": ["admin", "users", "{{new_user_id}}", "assign-tenant"]}
+          }
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{super_admin_token}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"admin\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/admin/users/{{new_user_id}}/role", "host": ["{{base_url}}"], "path": ["admin", "users", "{{new_user_id}}", "role"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "📄 Tenant - Pages",
+      "item": [
+        {
+          "name": "List All Pages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/pages", "host": ["{{base_url}}"], "path": ["pages"]}
+          }
+        },
+        {
+          "name": "Get Single Page",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/pages/{{page_id}}", "host": ["{{base_url}}"], "path": ["pages", "{{page_id}}"]}
+          }
+        },
+        {
+          "name": "Create Page",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Home Page\",\n  \"slug\": \"home\",\n  \"description\": \"Main landing page\",\n  \"status\": \"draft\",\n  \"components\": [],\n  \"styles\": []\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/pages", "host": ["{{base_url}}"], "path": ["pages"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.id) {",
+                "    pm.environment.set(\"page_id\", jsonData.id);",
+                "    console.log(\"✅ Page ID saved: \" + jsonData.id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "Update Page",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Home Page\",\n  \"description\": \"Updated description\",\n  \"html\": \"<h1>Welcome</h1>\",\n  \"css\": \"h1 { color: blue; }\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/pages/{{page_id}}", "host": ["{{base_url}}"], "path": ["pages", "{{page_id}}"]}
+          }
+        },
+        {
+          "name": "Delete Page",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/pages/{{page_id}}", "host": ["{{base_url}}"], "path": ["pages", "{{page_id}}"]}
+          }
+        },
+        {
+          "name": "Publish Page",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/pages/{{page_id}}/publish", "host": ["{{base_url}}"], "path": ["pages", "{{page_id}}", "publish"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎉 Tenant - Events",
+      "item": [
+        {
+          "name": "List All Events",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/events?status=published",
+              "host": ["{{base_url}}"],
+              "path": ["events"],
+              "query": [{"key": "status", "value": "published"}]
+            }
+          }
+        },
+        {
+          "name": "Get Single Event",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/events/{{event_id}}", "host": ["{{base_url}}"], "path": ["events", "{{event_id}}"]}
+          }
+        },
+        {
+          "name": "Create Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Tech Conference 2024\",\n  \"slug\": \"tech-conference-2024\",\n  \"description\": \"Annual technology conference\",\n  \"short_description\": \"Join us for the biggest tech event\",\n  \"start_date\": \"2024-12-15T09:00:00Z\",\n  \"end_date\": \"2024-12-17T18:00:00Z\",\n  \"timezone\": \"America/New_York\",\n  \"location_type\": \"hybrid\",\n  \"venue_name\": \"Convention Center\",\n  \"venue_address\": \"123 Main St, City\",\n  \"virtual_url\": \"https://zoom.us/j/example\",\n  \"registration_enabled\": true,\n  \"max_attendees\": 500,\n  \"registration_deadline\": \"2024-12-10T23:59:59Z\",\n  \"ticket_price\": 199,\n  \"currency\": \"USD\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/events", "host": ["{{base_url}}"], "path": ["events"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.id) {",
+                "    pm.environment.set(\"event_id\", jsonData.id);",
+                "    console.log(\"✅ Event ID saved: \" + jsonData.id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "Update Event",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Conference Name\",\n  \"description\": \"Updated description\",\n  \"max_attendees\": 600\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/events/{{event_id}}", "host": ["{{base_url}}"], "path": ["events", "{{event_id}}"]}
+          }
+        },
+        {
+          "name": "Delete Event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/events/{{event_id}}", "host": ["{{base_url}}"], "path": ["events", "{{event_id}}"]}
+          }
+        },
+        {
+          "name": "Publish Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/events/{{event_id}}/publish", "host": ["{{base_url}}"], "path": ["events", "{{event_id}}", "publish"]}
+          }
+        },
+        {
+          "name": "Add Speaker to Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"speaker_id\": \"{{speaker_id}}\",\n  \"role\": \"keynote\",\n  \"session_title\": \"Opening Keynote\",\n  \"session_description\": \"Welcome to the conference\",\n  \"session_start\": \"2024-12-15T09:00:00Z\",\n  \"session_end\": \"2024-12-15T10:00:00Z\",\n  \"session_room\": \"Main Hall\",\n  \"display_order\": 1\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/events/{{event_id}}/speakers", "host": ["{{base_url}}"], "path": ["events", "{{event_id}}", "speakers"]}
+          }
+        },
+        {
+          "name": "Remove Speaker from Event",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/events/{{event_id}}/speakers/{{speaker_id}}", "host": ["{{base_url}}"], "path": ["events", "{{event_id}}", "speakers", "{{speaker_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎤 Tenant - Speakers",
+      "item": [
+        {
+          "name": "List All Speakers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/speakers?featured=true",
+              "host": ["{{base_url}}"],
+              "path": ["speakers"],
+              "query": [{"key": "featured", "value": "true"}]
+            }
+          }
+        },
+        {
+          "name": "Get Single Speaker",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/speakers/{{speaker_id}}", "host": ["{{base_url}}"], "path": ["speakers", "{{speaker_id}}"]}
+          }
+        },
+        {
+          "name": "Create Speaker",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"title\": \"CTO\",\n  \"company\": \"Tech Corp\",\n  \"bio\": \"Expert in technology and innovation with 15 years of experience\",\n  \"short_bio\": \"Tech expert and innovator\",\n  \"photo_url\": \"https://example.com/avatar.jpg\",\n  \"email\": \"john@example.com\",\n  \"phone\": \"+1234567890\",\n  \"website\": \"https://johndoe.com\",\n  \"social_links\": {\n    \"twitter\": \"@johndoe\",\n    \"linkedin\": \"linkedin.com/in/johndoe\",\n    \"github\": \"github.com/johndoe\"\n  },\n  \"is_featured\": true\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/speakers", "host": ["{{base_url}}"], "path": ["speakers"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.id) {",
+                "    pm.environment.set(\"speaker_id\", jsonData.id);",
+                "    console.log(\"✅ Speaker ID saved: \" + jsonData.id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "Update Speaker",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"title\": \"VP of Engineering\",\n  \"bio\": \"Updated bio\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/speakers/{{speaker_id}}", "host": ["{{base_url}}"], "path": ["speakers", "{{speaker_id}}"]}
+          }
+        },
+        {
+          "name": "Delete Speaker",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/speakers/{{speaker_id}}", "host": ["{{base_url}}"], "path": ["speakers", "{{speaker_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🎟️ Tenant - Registrations",
+      "item": [
+        {
+          "name": "Public - Register for Event",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"event_id\": \"{{event_id}}\",\n  \"name\": \"Attendee Name\",\n  \"email\": \"attendee@example.com\",\n  \"phone\": \"+1234567890\",\n  \"company\": \"Company Inc\",\n  \"job_title\": \"Developer\",\n  \"ticket_type\": \"early_bird\",\n  \"custom_fields\": {\n    \"dietary_restrictions\": \"Vegetarian\",\n    \"t_shirt_size\": \"L\"\n  }\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/registrations", "host": ["{{base_url}}"], "path": ["registrations"]}
+          }
+        },
+        {
+          "name": "List Event Registrations",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/registrations/event/{{event_id}}?status=pending",
+              "host": ["{{base_url}}"],
+              "path": ["registrations", "event", "{{event_id}}"],
+              "query": [{"key": "status", "value": "pending"}]
+            }
+          }
+        },
+        {
+          "name": "Update Registration Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"confirmed\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/registrations/{{registration_id}}/status", "host": ["{{base_url}}"], "path": ["registrations", "{{registration_id}}", "status"]}
+          }
+        },
+        {
+          "name": "Cancel Registration",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/registrations/{{registration_id}}", "host": ["{{base_url}}"], "path": ["registrations", "{{registration_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "📁 Tenant - Assets",
+      "item": [
+        {
+          "name": "List All Assets",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/assets", "host": ["{{base_url}}"], "path": ["assets"]}
+          }
+        },
+        {
+          "name": "Upload File",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {"key": "file", "type": "file", "src": "/path/to/your/image.jpg"},
+                {"key": "name", "value": "My Image", "type": "text"}
+              ]
+            },
+            "url": {"raw": "{{base_url}}/assets/upload", "host": ["{{base_url}}"], "path": ["assets", "upload"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.id) {",
+                "    pm.environment.set(\"asset_id\", jsonData.id);",
+                "    pm.environment.set(\"asset_url\", jsonData.url);",
+                "    console.log(\"✅ Asset saved: \" + jsonData.id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "Delete Asset",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/assets/{{asset_id}}", "host": ["{{base_url}}"], "path": ["assets", "{{asset_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "📋 Tenant - Templates",
+      "item": [
+        {
+          "name": "List Templates",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {
+              "raw": "{{base_url}}/templates?category=landing",
+              "host": ["{{base_url}}"],
+              "path": ["templates"],
+              "query": [{"key": "category", "value": "landing"}]
+            }
+          }
+        },
+        {
+          "name": "Get Single Template",
+          "request": {
+            "method": "GET",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}"]}
+          }
+        },
+        {
+          "name": "Create Template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Landing Page Template\",\n  \"description\": \"Modern landing page design\",\n  \"category\": \"landing\",\n  \"thumbnail_url\": \"https://example.com/thumb.jpg\",\n  \"html\": \"<div class='hero'>...</div>\",\n  \"css\": \".hero { padding: 40px; }\",\n  \"components\": [],\n  \"styles\": []\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/templates", "host": ["{{base_url}}"], "path": ["templates"]}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "exec": [
+                "var jsonData = pm.response.json();",
+                "if (jsonData.id) {",
+                "    pm.environment.set(\"template_id\", jsonData.id);",
+                "    console.log(\"✅ Template ID saved: \" + jsonData.id);",
+                "}"
+              ],
+              "type": "text/javascript"
+            }
+          }]
+        },
+        {
+          "name": "Duplicate Template",
+          "request": {
+            "method": "POST",
+            "header": [
+              {"key": "Content-Type", "value": "application/json"},
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"My Copy of Template\"\n}",
+              "options": {"raw": {"language": "json"}}
+            },
+            "url": {"raw": "{{base_url}}/templates/{{template_id}}/duplicate", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}", "duplicate"]}
+          }
+        },
+        {
+          "name": "Delete Template",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {"key": "Authorization", "value": "Bearer {{tenant_token}}"},
+              {"key": "x-tenant-id", "value": "{{tenant_id}}"}
+            ],
+            "url": {"raw": "{{base_url}}/templates/{{template_id}}", "host": ["{{base_url}}"], "path": ["templates", "{{template_id}}"]}
+          }
+        }
+      ]
+    },
+    {
+      "name": "🌍 Public Endpoints",
+      "item": [
+        {
+          "name": "Get Public Homepage",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "x-tenant-id", "value": "{{tenant_id}}"}],
+            "url": {"raw": "{{base_url}}/public/pages/homepage", "host": ["{{base_url}}"], "path": ["public", "pages", "homepage"]}
+          }
+        },
+        {
+          "name": "Get Public Page",
+          "request": {
+            "method": "GET",
+            "header": [{"key": "x-tenant-id", "value": "{{tenant_id}}"}],
+            "url": {"raw": "{{base_url}}/public/pages/about", "host": ["{{base_url}}"], "path": ["public", "pages", "about"]}
+          }
+        },
+        {
+          "name": "Get Public Event",
+          "request": {
+            "method": "GET",
+            "url": {"raw": "{{base_url}}/events/public/tech-conference-2024", "host": ["{{base_url}}"], "path": ["events", "public", "tech-conference-2024"]}
+          }
+        },
+        {
+          "name": "Resolve Tenant by Domain",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/public/resolve-tenant?domain=demo.orbitly.com",
+              "host": ["{{base_url}}"],
+              "path": ["public", "resolve-tenant"],
+              "query": [{"key": "domain", "value": "demo.orbitly.com"}]
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://orbitly.onrender.com/api",
+      "type": "string"
+    }
+  ]
 }

@@ -246,3 +246,9 @@ export const publicPagesApi = {
     return res.json();
   },
 };
+
+// Tenant / Onboarding
+export const tenantApi = {
+  onboarding: (data: { email: string; password: string; full_name: string; niche: string; domain: string }) =>
+    api.post<{ message: string; tenant: any; user: any }>('/public/onboarding', data),
+};

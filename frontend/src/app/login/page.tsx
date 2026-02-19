@@ -2,10 +2,17 @@
 
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { authApi } from '@/lib/api';
+import { authApi, tenantApi } from '@/lib/api';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Lock, Mail, Shield } from 'lucide-react';
+import { Lock, Mail, Shield, Globe, Briefcase } from 'lucide-react';
+
+const NICHES = [
+  { value: 'static', label: 'Static Website' },
+  { value: 'ecommerce', label: 'E-commerce' },
+  { value: 'events', label: 'Events' },
+  { value: 'launchpad', label: 'Launchpad' },
+];
 
 function LoginForm() {
   const router = useRouter();
@@ -15,7 +22,10 @@ function LoginForm() {
   const [mode, setMode] = useState<'login' | 'signup'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [niche, setNiche] = useState('static');
+  const [domain, setDomain] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
@@ -32,8 +42,27 @@ function LoginForm() {
         await authApi.login(email, password);
         router.push(next);
       } else {
-        await authApi.register(email, password, fullName || undefined);
-        setSuccess('Check your email to confirm your account.');
+        if (password !== confirmPassword) {
+          throw new Error('Passwords do not match');
+        }
+        if (password.length < 8) {
+          throw new Error('Password must be at least 8 characters');
+        }
+        if (!domain.trim()) {
+          throw new Error('Domain is required');
+        }
+        const domainRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$/;
+        if (!domainRegex.test(domain.toLowerCase().trim())) {
+          throw new Error('Domain must be alphanumeric with hyphens, lowercase');
+        }
+        await tenantApi.onboarding({
+          email,
+          password,
+          full_name: fullName,
+          niche,
+          domain: domain.toLowerCase().trim(),
+        });
+        setSuccess('Account created! Check your email to verify.');
         setMode('login');
       }
     } catch (err: unknown) {
@@ -118,19 +147,58 @@ function LoginForm() {
 
         <form onSubmit={handleEmailSubmit} className="space-y-5">
           {mode === 'signup' && (
-            <div className="space-y-2">
-              <label htmlFor="fullName" className="text-sm font-medium text-foreground">
-                Full name
-              </label>
-              <Input
-                id="fullName"
-                type="text"
-                autoComplete="name"
-                placeholder="Jane Doe"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-              />
-            </div>
+            <>
+              <div className="space-y-2">
+                <label htmlFor="fullName" className="text-sm font-medium text-foreground">
+                  Full name
+                </label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Jane Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="domain" className="text-sm font-medium text-foreground">
+                  Workspace Domain
+                </label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="domain"
+                    type="text"
+                    placeholder="my-workspace"
+                    value={domain}
+                    onChange={(e) => setDomain(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''))}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Alphanumeric and hyphens only, lowercase</p>
+              </div>
+
+              <div className="space-y-2">
+                <label htmlFor="niche" className="text-sm font-medium text-foreground">
+                  <Briefcase className="inline h-4 w-4 mr-1" />
+                  Workspace Type
+                </label>
+                <select
+                  id="niche"
+                  value={niche}
+                  onChange={(e) => setNiche(e.target.value)}
+                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                >
+                  {NICHES.map((n) => (
+                    <option key={n.value} value={n.value}>{n.label}</option>
+                  ))}
+                </select>
+              </div>
+            </>
           )}
 
           <div className="space-y-2">
@@ -171,7 +239,29 @@ function LoginForm() {
                 className="pl-10"
               />
             </div>
+            {mode === 'signup' && <p className="text-xs text-muted-foreground">At least 8 characters</p>}
           </div>
+
+          {mode === 'signup' && (
+            <div className="space-y-2">
+              <label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
