@@ -4,7 +4,17 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/Card';
-import { X, Building2, Globe, Settings, Loader2 } from 'lucide-react';
+import { X, Building2, Globe, Settings, Loader2, Package } from 'lucide-react';
+
+// Module configuration by niche
+const MODULES_BY_NICHE = {
+  ecommerce: ['products', 'orders', 'customers', 'inventory'],
+  events: ['events', 'tickets', 'attendees', 'speakers'],
+  launchpad: ['pages', 'waitlist', 'campaigns'],
+  static: ['pages', 'blog', 'media', 'forms'],
+} as const;
+
+type NicheType = keyof typeof MODULES_BY_NICHE;
 
 interface CreateTenantDialogProps {
   isOpen: boolean;
@@ -16,6 +26,7 @@ export function CreateTenantDialog({ isOpen, onClose, onSubmit }: CreateTenantDi
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [domain, setDomain] = useState(''); // Optional, if needed
+  const [niche, setNiche] = useState<NicheType>('static');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -27,12 +38,20 @@ export function CreateTenantDialog({ isOpen, onClose, onSubmit }: CreateTenantDi
     setError('');
 
     try {
-      await onSubmit({ name, slug, domain });
+      const modules = MODULES_BY_NICHE[niche];
+      await onSubmit({ 
+        name, 
+        slug, 
+        domain,
+        niche,
+        modules 
+      });
       onClose();
       // Reset form
       setName('');
       setSlug('');
       setDomain('');
+      setNiche('static');
     } catch (err: any) {
       setError(err.message || 'Failed to create tenant');
     } finally {
@@ -91,9 +110,9 @@ export function CreateTenantDialog({ isOpen, onClose, onSubmit }: CreateTenantDi
               </div>
             </div>
 
-            <div className="space-y-2">
-               <label className="text-sm font-medium text-gray-300">Custom Domain (Optional)</label>
-                <div className="relative">
+             <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-300">Custom Domain (Optional)</label>
+                 <div className="relative">
                 <Globe className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder="e.g. app.acme.com"
@@ -103,7 +122,28 @@ export function CreateTenantDialog({ isOpen, onClose, onSubmit }: CreateTenantDi
                 />
               </div>
             </div>
-            
+
+            {/* Niche Selection */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">
+                <Package className="inline h-4 w-4 mr-1" />
+                Workspace Niche
+              </label>
+              <select
+                value={niche}
+                onChange={(e) => setNiche(e.target.value as NicheType)}
+                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-md text-sm text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="static" className="bg-gray-800">Static Website (Pages, Blog, Media)</option>
+                <option value="ecommerce" className="bg-gray-800">E-commerce (Products, Orders, Inventory)</option>
+                <option value="events" className="bg-gray-800">Events (Events, Tickets, Attendees)</option>
+                <option value="launchpad" className="bg-gray-800">Launchpad (Pages, Waitlist, Campaigns)</option>
+              </select>
+              <p className="text-xs text-gray-400">
+                Modules: {MODULES_BY_NICHE[niche].join(', ')}
+              </p>
+            </div>
+             
             <div className="flex justify-end gap-3 mt-6">
               <Button type="button" variant="ghost" onClick={onClose} disabled={isLoading}>
                 Cancel

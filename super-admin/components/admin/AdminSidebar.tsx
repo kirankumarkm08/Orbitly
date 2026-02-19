@@ -5,19 +5,28 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
   LayoutDashboard, 
-  Users, 
   Building2, 
+  UserPlus,
+  Activity,
   Settings,
   LogOut,
-  Shield
+  Shield,
+  FileText,
+  Code
 } from 'lucide-react';
-import { cn } from '@/lib/utils'; // Assuming lib/utils.ts is under super-admin root, so @/lib/utils is correct if @/* -> ./*
+import { cn } from '@/lib/utils';
 
 const navigation = [
-  { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-  { name: 'Tenants', href: '/tenants', icon: Building2 },
-  { name: 'Users', href: '/users', icon: Users },
-  { name: 'Settings', href: '/settings', icon: Settings },
+  { name: 'Overview', href: '/', icon: LayoutDashboard, description: 'Platform pulse' },
+  { name: 'Tenants', href: '/tenants', icon: Building2, description: 'Workspace directory' },
+  { name: 'Onboarding', href: '/onboarding', icon: UserPlus, description: 'Queue & funnel' },
+  { name: 'Operations', href: '/operations', icon: Activity, description: 'Tasks, queue health' },
+  { name: 'System', href: '/system', icon: Settings, description: 'Config, logs, security' },
+];
+
+const secondaryNav = [
+  { name: 'Docs', href: '/docs', icon: FileText },
+  { name: 'API', href: '/api-docs', icon: Code },
 ];
 
 export default function AdminSidebar() {
@@ -47,15 +56,41 @@ export default function AdminSidebar() {
               className={cn(
                 'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
                 isActive
-                  ? 'bg-primary/10 text-primary glow'
+                  ? 'bg-primary/10 text-primary'
                   : 'text-gray-400 hover:bg-white/5 hover:text-white'
               )}
             >
               <item.icon className="h-5 w-5" />
-              {item.name}
+              <div className="flex-1">
+                <div>{item.name}</div>
+                {item.description && (
+                  <div className="text-[10px] text-gray-500">{item.description}</div>
+                )}
+              </div>
             </Link>
           );
         })}
+        
+        <div className="pt-4 mt-4 border-t border-white/5">
+          {secondaryNav.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={cn(
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all duration-200',
+                  isActive
+                    ? 'bg-white/5 text-white'
+                    : 'text-gray-500 hover:bg-white/5 hover:text-gray-300'
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.name}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
 
       {/* User Info */}

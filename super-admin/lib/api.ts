@@ -34,7 +34,7 @@ export const api = {
   }),
   
   // Dashboard
-  getStats: () => apiRequest<any>('/admin/stats'), // Assuming this endpoint exists or we mock it
+  getStats: () => apiRequest<any>('/admin/stats'),
   
   // Tenants
   getTenants: () => apiRequest<any[]>('/admin/tenants'),
@@ -45,6 +45,12 @@ export const api = {
   deleteTenant: (id: string) => apiRequest<void>(`/admin/tenants/${id}`, {
     method: 'DELETE',
   }),
+  getTenantModules: (tenantId: string) => apiRequest<any[]>(`/admin/tenants/${tenantId}/modules`),
+  toggleModule: (tenantId: string, moduleName: string, isEnabled: boolean) => 
+    apiRequest<any>(`/admin/tenants/${tenantId}/modules/${moduleName}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ is_enabled: isEnabled }),
+    }),
   
   // Users
   getUsers: () => apiRequest<any[]>('/admin/users'),

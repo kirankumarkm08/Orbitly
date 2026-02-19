@@ -2,21 +2,24 @@
 
 import React from 'react';
 import { Bell, Search } from 'lucide-react';
-import { Input } from '@/components/ui/Input';
 
-export default function AdminHeader() {
+interface AdminHeaderProps {
+  onOpenCommandPalette?: () => void;
+}
+
+export default function AdminHeader({ onOpenCommandPalette }: AdminHeaderProps) {
   return (
     <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b border-white/5 glass px-6">
-      {/* Search */}
+      {/* Search / Command Palette Trigger */}
       <div className="flex-1 max-w-md">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Search..."
-            className="pl-10 bg-white/5 border-white/10"
-          />
-        </div>
+        <button 
+          onClick={onOpenCommandPalette}
+          className="w-full flex items-center gap-3 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-400 hover:bg-white/10 transition-all text-sm text-left"
+        >
+          <Search className="h-4 w-4" />
+          <span className="flex-1">Search or type a command...</span>
+          <kbd className="px-2 py-0.5 text-xs bg-white/10 rounded text-gray-500">⌘K</kbd>
+        </button>
       </div>
 
       {/* Actions */}
