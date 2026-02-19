@@ -32,8 +32,13 @@ router.get('/:id', asyncHandler(async (req, res) => {
 }));
 // POST /api/pages - Create new page
 router.post('/', asyncHandler(async (req, res) => {
-    const { name, slug, description, html, css, components, styles, meta_title, meta_description } = req.body;
+    console.log('[PagesAPI] POST /api/pages - Request received');
+    console.log('[PagesAPI] Tenant ID:', req.tenantId);
+    console.log('[PagesAPI] User:', req.user?.id);
+    console.log('[PagesAPI] Request body:', req.body);
+    const { name, slug, description, html, css, components, styles, status, meta_title, meta_description, favicon_url } = req.body;
     if (!name || !slug) {
+        console.log('[PagesAPI] Validation failed: Name or slug missing');
         throw createError('Name and slug are required', 400);
     }
     console.log(`[PagesAPI] Creating page: ${name} (slug: ${slug}) for tenant: ${req.tenantId}`);
@@ -48,8 +53,10 @@ router.post('/', asyncHandler(async (req, res) => {
         css,
         components: components || [],
         styles: styles || [],
+        status: status || 'draft',
         meta_title,
         meta_description,
+        favicon_url,
         created_by: req.user?.id,
         updated_by: req.user?.id,
     })
@@ -65,8 +72,12 @@ router.post('/', asyncHandler(async (req, res) => {
 }));
 // PUT /api/pages/:id - Update page
 router.put('/:id', asyncHandler(async (req, res) => {
+    console.log('[PagesAPI] PUT /api/pages/:id - Request received');
+    console.log('[PagesAPI] Page ID:', req.params.id);
+    console.log('[PagesAPI] Tenant ID:', req.tenantId);
+    console.log('[PagesAPI] Request body:', req.body);
     const { id } = req.params;
-    const { name, slug, description, html, css, components, styles, status, meta_title, meta_description, is_homepage } = req.body;
+    const { name, slug, description, html, css, components, styles, status, meta_title, meta_description, favicon_url, is_homepage } = req.body;
     const { data, error } = await supabaseAdmin
         .from('pages')
         .update({
@@ -80,6 +91,7 @@ router.put('/:id', asyncHandler(async (req, res) => {
         status,
         meta_title,
         meta_description,
+        favicon_url,
         is_homepage,
         updated_by: req.user?.id,
     })

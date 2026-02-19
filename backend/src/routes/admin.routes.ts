@@ -41,7 +41,7 @@ router.get('/tenants', asyncHandler(async (req: Request, res: Response) => {
 
 // POST /api/admin/tenants - Create new tenant
 router.post('/tenants', asyncHandler(async (req: Request, res: Response) => {
-  const { name, slug, settings, niche, modules } = req.body;
+  const { name, slug, settings, niche, niches, domain, modules } = req.body;
 
   if (!name || !slug) {
     throw createError('Tenant name and slug are required', 400);
@@ -69,7 +69,9 @@ router.post('/tenants', asyncHandler(async (req: Request, res: Response) => {
     .insert({
       name,
       slug,
+      domain: domain || null,
       niche: niche || 'static',
+      niches: niches || [],
       settings: {
         ...settings,
         modules: tenantModules,

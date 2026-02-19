@@ -8,6 +8,9 @@ export interface Database {
           id: string;
           name: string;
           slug: string;
+          domain: string | null;
+          niche: string;
+          niches: string[];
           settings: Record<string, unknown>;
           created_at: string;
           updated_at: string;
@@ -16,6 +19,9 @@ export interface Database {
           id?: string;
           name: string;
           slug: string;
+          domain?: string | null;
+          niche?: string;
+          niches?: string[];
           settings?: Record<string, unknown>;
           created_at?: string;
           updated_at?: string;
@@ -24,6 +30,9 @@ export interface Database {
           id?: string;
           name?: string;
           slug?: string;
+          domain?: string | null;
+          niche?: string;
+          niches?: string[];
           settings?: Record<string, unknown>;
           updated_at?: string;
         };

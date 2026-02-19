@@ -32,22 +32,63 @@ router.get('/tenants', asyncHandler(async (req, res) => {
 }));
 // POST /api/admin/tenants - Create new tenant
 router.post('/tenants', asyncHandler(async (req, res) => {
-    const { name, slug, settings } = req.body;
+    const { name, slug, settings, niche, niches, domain, modules } = req.body;
     if (!name || !slug) {
         throw createError('Tenant name and slug are required', 400);
     }
+    // Validate niche if provided
+    const validNiches = ['ecommerce', 'events', 'launchpad', 'static'];
+    if (niche && !validNiches.includes(niche)) {
+        throw createError('Invalid niche type', 400);
+    }
+    // Default modules based on niche if not provided
+    const defaultModules = {
+        ecommerce: ['products', 'orders', 'customers', 'inventory'],
+        events: ['events', 'tickets', 'attendees', 'speakers'],
+        launchpad: ['pages', 'waitlist', 'campaigns'],
+        static: ['pages', 'blog', 'media', 'forms'],
+    };
+    const tenantModules = modules || (niche ? defaultModules[niche] : defaultModules.static);
+    // Create tenant
     const { data, error } = await supabaseAdmin
         .from('tenants')
         .insert({
         name,
         slug,
-        settings: settings || {},
+        domain: domain || null,
+        niche: niche || 'static',
+        niches: niches || [],
+        settings: {
+            ...settings,
+            modules: tenantModules,
+            features: {
+                ...settings?.features,
+                enabledModules: tenantModules,
+            }
+        },
     })
         .select()
         .single();
     if (error)
         throw createError(error.message, 500);
-    res.status(201).json(data);
+    // Create tenant_modules entries for each module
+    const moduleInserts = tenantModules.map((moduleName) => ({
+        tenant_id: data.id,
+        module_name: moduleName,
+        is_enabled: true,
+        settings: {},
+    }));
+    const { error: modulesError } = await supabaseAdmin
+        .from('tenant_modules')
+        .insert(moduleInserts);
+    if (modulesError) {
+        console.error('Failed to create tenant modules:', modulesError);
+        // Don't fail the tenant creation if modules insertion fails
+    }
+    res.status(201).json({
+        ...data,
+        modules: tenantModules,
+    });
 }));
 // GET /api/admin/users - List all users
 router.get('/users', asyncHandler(async (req, res) => {
@@ -113,6 +154,39 @@ router.delete('/tenants/:tenantId', asyncHandler(async (req, res) => {
     if (error)
         throw createError('Failed to delete tenant', 500);
     res.status(204).send();
+}));
+// GET /api/admin/tenants/:tenantId/modules - Get modules for a tenant
+router.get('/tenants/:tenantId/modules', asyncHandler(async (req, res) => {
+    const { tenantId } = req.params;
+    const { data, error } = await supabaseAdmin
+        .from('tenant_modules')
+        .select('*')
+        .eq('tenant_id', tenantId)
+        .eq('is_enabled', true)
+        .order('module_name');
+    if (error)
+        throw createError(error.message, 500);
+    res.json(data);
+}));
+// PATCH /api/admin/tenants/:tenantId/modules/:moduleName - Toggle module
+router.patch('/tenants/:tenantId/modules/:moduleName', asyncHandler(async (req, res) => {
+    const { tenantId, moduleName } = req.params;
+    const { is_enabled, settings } = req.body;
+    const updateData = {};
+    if (typeof is_enabled === 'boolean')
+        updateData.is_enabled = is_enabled;
+    if (settings)
+        updateData.settings = settings;
+    const { data, error } = await supabaseAdmin
+        .from('tenant_modules')
+        .update(updateData)
+        .eq('tenant_id', tenantId)
+        .eq('module_name', moduleName)
+        .select()
+        .single();
+    if (error)
+        throw createError(error.message, 500);
+    res.json(data);
 }));
 export default router;
 //# sourceMappingURL=admin.routes.js.map

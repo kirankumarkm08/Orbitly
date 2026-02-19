@@ -25,12 +25,26 @@ interface CreateTenantDialogProps {
 export function CreateTenantDialog({ isOpen, onClose, onSubmit }: CreateTenantDialogProps) {
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
-  const [domain, setDomain] = useState(''); // Optional, if needed
+  const [domain, setDomain] = useState('');
   const [niche, setNiche] = useState<NicheType>('static');
+  const [niches, setNiches] = useState<string[]>([]);
+  const [nichesInput, setNichesInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
+
+  const handleAddNiche = () => {
+    const trimmed = nichesInput.trim();
+    if (trimmed && !niches.includes(trimmed)) {
+      setNiches([...niches, trimmed]);
+      setNichesInput('');
+    }
+  };
+
+  const handleRemoveNiche = (nicheToRemove: string) => {
+    setNiches(niches.filter(n => n !== nicheToRemove));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,16 +56,18 @@ export function CreateTenantDialog({ isOpen, onClose, onSubmit }: CreateTenantDi
       await onSubmit({ 
         name, 
         slug, 
-        domain,
+        domain: domain || null,
         niche,
+        niches,
         modules 
       });
       onClose();
-      // Reset form
       setName('');
       setSlug('');
       setDomain('');
       setNiche('static');
+      setNiches([]);
+      setNichesInput('');
     } catch (err: any) {
       setError(err.message || 'Failed to create tenant');
     } finally {
@@ -139,11 +155,35 @@ export function CreateTenantDialog({ isOpen, onClose, onSubmit }: CreateTenantDi
                 <option value="events" className="bg-gray-800">Events (Events, Tickets, Attendees)</option>
                 <option value="launchpad" className="bg-gray-800">Launchpad (Pages, Waitlist, Campaigns)</option>
               </select>
-              <p className="text-xs text-gray-400">
+<p className="text-xs text-gray-400">
                 Modules: {MODULES_BY_NICHE[niche].join(', ')}
               </p>
             </div>
-             
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300">Niches (Optional)</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g. tech, fashion"
+                  className="flex-1 bg-white/5 border-white/10"
+                  value={nichesInput}
+                  onChange={(e) => setNichesInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddNiche())}
+                />
+                <Button type="button" variant="outline" onClick={handleAddNiche}>Add</Button>
+              </div>
+              {niches.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {niches.map((n) => (
+                    <span key={n} className="px-2 py-1 bg-white/10 rounded text-xs flex items-center gap-1">
+                      {n}
+                      <button type="button" onClick={() => handleRemoveNiche(n)} className="text-gray-400 hover:text-white">&times;</button>
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+              
             <div className="flex justify-end gap-3 mt-6">
               <Button type="button" variant="ghost" onClick={onClose} disabled={isLoading}>
                 Cancel
