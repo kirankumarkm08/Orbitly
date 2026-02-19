@@ -50,6 +50,17 @@ export function useAdminData() {
     }
   }, [fetchTenants]);
 
+  const deleteTenant = useCallback(async (id: string) => {
+    try {
+      await api.deleteTenant(id);
+      await fetchTenants(); // Refresh list
+      return true;
+    } catch (err) {
+      console.error(err);
+      throw err;
+    }
+  }, [fetchTenants]);
+
   const fetchUsers = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -83,5 +94,6 @@ export function useAdminData() {
     fetchTenants,
     fetchUsers,
     createTenant,
+    deleteTenant,
   };
 }
