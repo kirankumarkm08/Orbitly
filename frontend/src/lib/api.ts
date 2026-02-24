@@ -19,6 +19,8 @@ class ApiClient {
   }
 
   // Get tenant ID from logged-in user's metadata
+  // For authenticated routes, the tenant always comes from the user profile.
+  // Public routes use dynamic domain-based resolution (see resolve-tenant.ts).
   private async getTenantHeader(): Promise<Record<string, string>> {
     const supabase = getSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -28,12 +30,6 @@ class ApiClient {
     
     if (tenantId) {
       return { 'X-Tenant-Id': tenantId };
-    }
-    
-    // Fallback to env variable for public routes
-    const envTenantId = process.env.NEXT_PUBLIC_TENANT_ID;
-    if (envTenantId) {
-      return { 'X-Tenant-Id': envTenantId };
     }
     
     return {};
@@ -184,6 +180,36 @@ export const pagesApi = {
   publish: (id: string) => api.post<any>(`/pages/${id}/publish`, {}),
 };
 
+// E-commerce
+export const productsApi = {
+  list: (params: { status?: string; category_id?: string; limit?: number; offset?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.status) query.append('status', params.status);
+    if (params.category_id) query.append('category_id', params.category_id);
+    if (params.limit) query.append('limit', params.limit.toString());
+    if (params.offset) query.append('offset', params.offset.toString());
+    return api.get<{ data: any[]; count: number }>(`/products${query.toString() ? `?${query.toString()}` : ''}`);
+  },
+  get: (id: string) => api.get<any>(`/products/${id}`),
+  create: (data: any) => api.post<any>('/products', data),
+  update: (id: string, data: any) => api.put<any>(`/products/${id}`, data),
+  delete: (id: string) => api.delete(`/products/${id}`),
+  
+  // Variants
+  listVariants: (productId: string) => api.get<any[]>(`/products/${productId}/variants`),
+  createVariant: (productId: string, data: any) => api.post<any>(`/products/${productId}/variants`, data),
+  updateVariant: (productId: string, variantId: string, data: any) => api.put<any>(`/products/${productId}/variants/${variantId}`, data),
+  deleteVariant: (productId: string, variantId: string) => api.delete(`/products/${productId}/variants/${variantId}`),
+};
+
+export const categoriesApi = {
+  list: () => api.get<any[]>('/categories'),
+  get: (id: string) => api.get<any>(`/categories/${id}`),
+  create: (data: any) => api.post<any>('/categories', data),
+  update: (id: string, data: any) => api.put<any>(`/categories/${id}`, data),
+  delete: (id: string) => api.delete(`/categories/${id}`),
+};
+
 // Assets
 export const assetsApi = {
   list: () => api.get<any[]>('/assets'),
@@ -245,6 +271,113 @@ export const publicPagesApi = {
     if (!res.ok) return null;
     return res.json();
   },
+  listPublicProducts: async (tenantId: string, categoryId?: string) => {
+    const query = new URLSearchParams({ tenant_id: tenantId });
+    if (categoryId) query.append('category_id', categoryId);
+    const res = await fetch(`${API_URL}/public/products?${query.toString()}`);
+    if (!res.ok) return [];
+    return res.json();
+  },
+  getPublicProduct: async (slug: string, tenantId: string) => {
+    const res = await fetch(`${API_URL}/public/products/${slug}?tenant_id=${tenantId}`);
+    if (!res.ok) return null;
+    return res.json();
+  },
+};
+
+// Stripe Payments
+export const stripeApi = {
+  createCheckoutSession: async (data: { 
+    line_items: any[]; 
+    success_url?: string; 
+    cancel_url?: string; 
+    metadata?: any 
+  }) => {
+    return api.post<{ url: string; id: string }>('/stripe/checkout', data);
+  },
+  getConnectOnboardingUrl: async () => {
+    return api.post<{ url: string }>('/stripe/connect/onboarding', {});
+  },
+  getConnectStatus: async () => {
+    return api.get<{ connected: boolean; id?: string; charges_enabled?: boolean; payouts_enabled?: boolean }>('/stripe/connect/status');
+  },
+  getSummary: async () => {
+    return api.get<any>('/stripe/summary');
+  },
+};
+
+// Orders
+export const ordersApi = {
+  list: async (params?: any) => {
+    const query = new URLSearchParams(params).toString();
+    return api.get<{ data: any[]; count: number }>(`/orders?${query}`);
+  },
+  get: async (id: string) => {
+    return api.get<any>(`/orders/${id}`);
+  },
+  updateStatus: async (id: string, status: string) => {
+    return api.put<any>(`/orders/${id}/status`, { status });
+  },
+};
+
+// Customers
+export const customersApi = {
+  list: (params: { status?: string; search?: string; limit?: number; offset?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.status) query.append('status', params.status);
+    if (params.search) query.append('search', params.search);
+    if (params.limit) query.append('limit', params.limit.toString());
+    if (params.offset) query.append('offset', params.offset.toString());
+    return api.get<{ data: any[]; count: number }>(`/customers${query.toString() ? `?${query.toString()}` : ''}`);
+  },
+  get: (id: string) => api.get<any>(`/customers/${id}`),
+  create: (data: any) => api.post<any>('/customers', data),
+  update: (id: string, data: any) => api.put<any>(`/customers/${id}`, data),
+  delete: (id: string) => api.delete(`/customers/${id}`),
+  sync: () => api.post<any>('/customers/sync', {}),
+};
+
+// Team Users
+export const usersApi = {
+  list: (params: { role?: string; search?: string; limit?: number; offset?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.role) query.append('role', params.role);
+    if (params.search) query.append('search', params.search);
+    if (params.limit) query.append('limit', params.limit.toString());
+    if (params.offset) query.append('offset', params.offset.toString());
+    return api.get<{ data: any[]; count: number }>(`/users${query.toString() ? `?${query.toString()}` : ''}`);
+  },
+  get: (id: string) => api.get<any>(`/users/${id}`),
+  invite: (data: { email: string; full_name?: string; role?: string }) => 
+    api.post<any>('/users/invite', data),
+  update: (id: string, data: any) => api.put<any>(`/users/${id}`, data),
+  delete: (id: string) => api.delete(`/users/${id}`),
+};
+
+// Forms
+export const formsApi = {
+  list: (params: { status?: string; search?: string; limit?: number; offset?: number } = {}) => {
+    const query = new URLSearchParams();
+    if (params.status) query.append('status', params.status);
+    if (params.search) query.append('search', params.search);
+    if (params.limit) query.append('limit', params.limit.toString());
+    if (params.offset) query.append('offset', params.offset.toString());
+    return api.get<{ data: any[]; count: number }>(`/forms${query.toString() ? `?${query.toString()}` : ''}`);
+  },
+  get: (id: string) => api.get<any>(`/forms/${id}`),
+  create: (data: any) => api.post<any>('/forms', data),
+  update: (id: string, data: any) => api.put<any>(`/forms/${id}`, data),
+  delete: (id: string) => api.delete(`/forms/${id}`),
+  getSubmissions: (id: string) => api.get<any[]>(`/forms/${id}/submissions`),
+  submit: (id: string, data: any) => api.post<any>(`/forms/${id}/submit`, data),
+};
+
+// AI Block Generator
+export const aiApi = {
+  generateBlock: (data: { prompt: string; category?: string; style_preferences?: { theme?: string; accent_color?: string } }) =>
+    api.post<{ html: string; css: string; name: string; description: string; category: string; ai_generated: boolean }>('/ai/generate-block', data),
+  refineBlock: (data: { prompt: string; current_html: string; current_css: string }) =>
+    api.post<{ html: string; css: string }>('/ai/refine-block', data),
 };
 
 // Tenant / Onboarding

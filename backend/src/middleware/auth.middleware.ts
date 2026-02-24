@@ -32,20 +32,7 @@ export const authMiddleware = async (
     let finalProfile = userProfile;
 
     if (profileError || !userProfile) {
-      console.warn('AuthMiddleware: Profile not found for userId:', user.id, '. Checking for super admin fallback.');
-      
-      // Fallback: If it's the known super admin email, create a virtual profile
-      if (user.email === 'admin@example.com' || user.email === 'admin@minimal-saas.com') {
-        finalProfile = {
-          id: user.id,
-          email: user.email,
-          role: 'super_admin',
-          tenant_id: null,
-          full_name: 'Super Admin Fallback'
-        };
-      } else {
-        return res.status(401).json({ error: 'User profile not found' });
-      }
+      return res.status(401).json({ error: 'User profile not found. Please contact an administrator.' });
     }
 
     // Attach user and tenant to request
@@ -88,7 +75,12 @@ export const optionalAuth = async (
 
         if (userProfile) {
           req.user = userProfile;
-          req.tenantId = userProfile.tenant_id;
+          const headerTenantId = req.headers['x-tenant-id'];
+          if (userProfile.role === 'super_admin' && headerTenantId) {
+            req.tenantId = headerTenantId as string;
+          } else {
+            req.tenantId = userProfile.tenant_id;
+          }
         }
       }
     }

@@ -54,4 +54,56 @@ router.get('/pages/:slug', asyncHandler(async (req: Request, res: Response) => {
   res.json(data);
 }));
 
+// --- E-commerce Public Endpoints ---
+
+// GET /api/public/products — List published products for a tenant
+router.get('/products', asyncHandler(async (req: Request, res: Response) => {
+  const tenantId = req.headers['x-tenant-id'] as string || req.query.tenant_id as string;
+  const categoryId = req.query.category_id as string;
+
+  if (!tenantId) {
+    throw createError('Tenant ID is required', 400);
+  }
+
+  let query = supabaseAdmin
+    .from('products')
+    .select('*, categories(name)')
+    .eq('tenant_id', tenantId)
+    .eq('status', 'active')
+    .order('created_at', { ascending: false });
+
+  if (categoryId) {
+    query = query.eq('category_id', categoryId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw createError(error.message, 500);
+  res.json(data);
+}));
+
+// GET /api/public/products/:slug — Get a published product by slug
+router.get('/products/:slug', asyncHandler(async (req: Request, res: Response) => {
+  const { slug } = req.params;
+  const tenantId = req.headers['x-tenant-id'] as string || req.query.tenant_id as string;
+
+  if (!tenantId) {
+    throw createError('Tenant ID is required', 400);
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from('products')
+    .select('*, product_variants(*), categories(name)')
+    .eq('tenant_id', tenantId)
+    .eq('slug', slug)
+    .eq('status', 'active')
+    .single();
+
+  if (error || !data) {
+    throw createError('Product not found', 404);
+  }
+
+  res.json(data);
+}));
+
 export default router;

@@ -34,8 +34,18 @@ async function setupSuperAdmin() {
   console.log('✅ Tenant created:', tenant.id);
 
   // Step 2: Create super admin user in Supabase Auth
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
-  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123456';
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (!adminEmail || !adminPassword) {
+    console.error('❌ ADMIN_EMAIL and ADMIN_PASSWORD env vars are required');
+    process.exit(1);
+  }
+
+  if (adminPassword.length < 12) {
+    console.error('❌ ADMIN_PASSWORD must be at least 12 characters');
+    process.exit(1);
+  }
 
   console.log('\n👤 Creating super admin user...');
   console.log(`Email: ${adminEmail}`);
@@ -62,7 +72,7 @@ async function setupSuperAdmin() {
       email: adminEmail,
       full_name: 'Super Admin',
       role: 'super_admin',
-      tenant_id: tenant.id,
+      tenant_id: null,
     })
     .select()
     .single();

@@ -1,11 +1,12 @@
 import { notFound } from 'next/navigation';
 import PageRenderer from '@/components/PageRenderer';
 import { headers } from 'next/headers';
+import { resolveTenantFromHost } from '@/lib/resolve-tenant';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
 // Known routes that should not be handled by this catch-all
-const RESERVED_PATHS = ['admin', 'login', 'dashboard', 'demo', 'api', '_next', 'favicon.ico'];
+const RESERVED_PATHS = ['admin', 'login', 'dashboard', 'demo', 'api', '_next', 'favicon.ico', 'products', 'store'];
 
 async function getPageBySlug(slug: string, tenantId: string) {
   try {
@@ -23,32 +24,6 @@ async function getPageBySlug(slug: string, tenantId: string) {
   }
 }
 
-async function getTenantFromRequest() {
-  const headersList = await headers();
-  const host = headersList.get('host') || '';
-  
-  // In production, extract tenant from subdomain
-  // e.g., demo.yourapp.com -> demo
-  const parts = host.split('.');
-  
-  // For localhost or simple hostnames, use env variable
-  if (host === 'localhost' || parts.length < 3) {
-    return process.env.NEXT_PUBLIC_TENANT_ID || '';
-  }
-  
-  // Extract subdomain
-  const subdomain = parts[0];
-  
-  // Map subdomain to tenant ID
-  // You can replace this with a database lookup
-  const tenantMap: Record<string, string> = {
-    'demo': process.env.NEXT_PUBLIC_TENANT_ID || '',
-    // Add more subdomains here
-  };
-  
-  return tenantMap[subdomain] || process.env.NEXT_PUBLIC_TENANT_ID || '';
-}
-
 export async function generateMetadata({ params }: { params: Promise<{ slug: string[] }> }) {
   const { slug } = await params;
   const slugPath = slug.join('/');
@@ -57,7 +32,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     return {};
   }
 
-  const tenantId = await getTenantFromRequest();
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const tenantId = await resolveTenantFromHost(host);
   if (!tenantId) {
     return { title: 'Invalid Tenant' };
   }
@@ -80,7 +57,9 @@ export default async function CatchAllPage({ params }: { params: Promise<{ slug:
     notFound();
   }
 
-  const tenantId = await getTenantFromRequest();
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const tenantId = await resolveTenantFromHost(host);
   if (!tenantId) {
     return (
       <div style={{ padding: 40, textAlign: 'center' }}>

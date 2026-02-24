@@ -2,31 +2,9 @@ import Link from "next/link";
 import PageRenderer from "@/components/PageRenderer";
 import { ArrowRight, Zap, Shield, Sparkles } from "lucide-react";
 import { headers } from "next/headers";
+import { resolveTenantFromHost } from "@/lib/resolve-tenant";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-
-async function getTenantFromRequest() {
-  const headersList = await headers();
-  const host = headersList.get('host') || '';
-  
-  // For localhost or simple hostnames, use env variable
-  if (host === 'localhost') {
-    return process.env.NEXT_PUBLIC_TENANT_ID || '';
-  }
-  
-  // In production, extract tenant from subdomain
-  const parts = host.split('.');
-  if (parts.length >= 3) {
-    const subdomain = parts[0];
-    const tenantMap: Record<string, string> = {
-      'demo': process.env.NEXT_PUBLIC_TENANT_ID || '',
-      // Add more subdomains here
-    };
-    return tenantMap[subdomain] || '';
-  }
-  
-  return process.env.NEXT_PUBLIC_TENANT_ID || '';
-}
 
 async function getHomepage(tenantId: string) {
   try {
@@ -45,7 +23,9 @@ async function getHomepage(tenantId: string) {
 }
 
 export default async function Home() {
-  const tenantId = await getTenantFromRequest();
+  const headersList = await headers();
+  const host = headersList.get('host') || '';
+  const tenantId = await resolveTenantFromHost(host);
   
   // If tenant is configured, try to get their homepage
   if (tenantId) {

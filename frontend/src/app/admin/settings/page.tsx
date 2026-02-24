@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { Input } from '@/components/ui/Input';
 import { 
   Save, 
@@ -14,20 +15,55 @@ import {
   Info,
   RefreshCw,
   Download,
-  AlertTriangle
+  AlertTriangle,
+  CreditCard,
+  CheckCircle2,
+  ExternalLink,
+  ChevronRight
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import { stripeApi } from '@/lib/api';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState('general');
+  const [stripeStatus, setStripeStatus] = useState<any>(null);
+  const [checkingStripe, setCheckingStripe] = useState(false);
 
   const tabs = [
     { id: 'general', name: 'General', icon: SettingsIcon },
+    { id: 'payments', name: 'Payments', icon: CreditCard },
     { id: 'notifications', name: 'Notifications', icon: Bell },
     { id: 'security', name: 'Security', icon: Shield },
     { id: 'backup', name: 'Backup & API', icon: Database },
   ];
+
+  const checkStripeStatus = async () => {
+    setCheckingStripe(true);
+    try {
+      const data = await stripeApi.getConnectStatus();
+      setStripeStatus(data);
+    } catch (err) {
+      console.error('Failed to check stripe status');
+    } finally {
+      setCheckingStripe(false);
+    }
+  };
+
+  const handleConnectStripe = async () => {
+    try {
+      const { url } = await stripeApi.getConnectOnboardingUrl();
+      window.location.href = url;
+    } catch (err) {
+      alert('Failed to initiate Stripe Connect onboarding');
+    }
+  };
+
+  React.useEffect(() => {
+    if (activeTab === 'payments') {
+      checkStripeStatus();
+    }
+  }, [activeTab]);
 
   return (
 
@@ -78,6 +114,94 @@ export default function SettingsPage() {
                 <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex gap-3 text-sm text-blue-400">
                   <Info className="h-5 w-5 shrink-0" />
                   <p>Updates are applied automatically. Your platform is currently running the latest stable release.</p>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === 'payments' && (
+            <Card variant="glass" className="border-border">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Payment Integration</CardTitle>
+                    <CardDescription>Connect your Stripe account to start receiving payments</CardDescription>
+                  </div>
+                  <CreditCard className="h-8 w-8 text-primary/50" />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {!stripeStatus?.connected ? (
+                  <div className="p-8 rounded-2xl bg-muted/50 border-2 border-dashed border-border flex flex-col items-center text-center gap-4">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <CreditCard className="h-8 w-8 text-primary" />
+                    </div>
+                    <div className="max-w-md">
+                      <h3 className="text-lg font-bold">Connect with Stripe</h3>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Orbitly uses Stripe Connect to safely process payments and deposit earnings directly into your bank account.
+                      </p>
+                    </div>
+                    <Button onClick={handleConnectStripe} className="px-10 h-12 rounded-full gap-2 text-lg font-bold mt-2">
+                       Connect Stripe Account <ChevronRight className="h-4 w-4" />
+                    </Button>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Powered by Stripe</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="p-6 rounded-2xl bg-success/5 border border-success/20 flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="h-12 w-12 rounded-xl bg-success/10 flex items-center justify-center">
+                          <CheckCircle2 className="h-6 w-6 text-success" />
+                        </div>
+                        <div>
+                          <p className="font-bold text-foreground">Stripe Account Connected</p>
+                          <p className="text-xs text-muted-foreground">ID: {stripeStatus.id}</p>
+                        </div>
+                      </div>
+                      <Badge className="bg-success text-white">Active</Badge>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="p-4 rounded-xl bg-muted border border-border">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Charges Enabled</p>
+                        <div className="flex items-center gap-2">
+                          <div className={cn("h-2 w-2 rounded-full", stripeStatus.charges_enabled ? "bg-success" : "bg-destructive")} />
+                          <span className="text-sm font-medium">{stripeStatus.charges_enabled ? "Ready to accept payments" : "Pending activation"}</span>
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-muted border border-border">
+                        <p className="text-[10px] text-muted-foreground uppercase font-bold mb-1">Payouts Enabled</p>
+                        <div className="flex items-center gap-2">
+                          <div className={cn("h-2 w-2 rounded-full", stripeStatus.payouts_enabled ? "bg-success" : "bg-destructive")} />
+                          <span className="text-sm font-medium">{stripeStatus.payouts_enabled ? "Payouts are active" : "Verification required"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-4">
+                       <Button variant="outline" size="sm" className="gap-2" onClick={() => window.open('https://dashboard.stripe.com', '_blank')}>
+                         <ExternalLink className="h-4 w-4" /> Manage on Stripe
+                       </Button>
+                       <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={handleConnectStripe}>
+                         Re-authenticate
+                       </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-4 pt-6 border-t border-border">
+                  <h4 className="text-sm font-bold uppercase tracking-widest">Platform Fees</h4>
+                  <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary">5%</div>
+                      <div>
+                        <p className="text-sm font-medium">Standard Application Fee</p>
+                        <p className="text-xs text-muted-foreground">Charged per successful transaction</p>
+                      </div>
+                    </div>
+                    <Info className="h-4 w-4 text-primary/40" />
+                  </div>
                 </div>
               </CardContent>
             </Card>

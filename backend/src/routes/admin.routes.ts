@@ -8,21 +8,9 @@ const router = express.Router();
 
 // Middleware to check if user is super admin
 const superAdminMiddleware = asyncHandler(async (req: Request, res: Response, next: Function) => {
-  // If req.user already has the role (from authMiddleware fallback), use it
-  if (req.user?.role === 'super_admin') {
-    return next();
-  }
-
-  const { data: user, error } = await supabaseAdmin
-    .from('users')
-    .select('role')
-    .eq('id', req.user?.id)
-    .single();
-
-  if (error || !user || user.role !== 'super_admin') {
+  if (req.user?.role !== 'super_admin') {
     throw createError('Unauthorized: Super admin access required', 403);
   }
-
   next();
 });
 

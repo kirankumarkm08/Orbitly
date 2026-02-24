@@ -32,6 +32,7 @@ export const api = {
     method: 'POST',
     body: JSON.stringify(credentials),
   }),
+  validateToken: () => apiRequest<{ user: any }>('/auth/me'),
   
   // Public - Onboarding
   onboarding: (data: { email: string; password: string; full_name: string; niche: string; domain: string }) =>
@@ -61,12 +62,12 @@ export const api = {
   
   // Users
   getUsers: () => apiRequest<any[]>('/admin/users'),
-  assignTenant: (userId: string, tenantId: string) => apiRequest<void>('/admin/users/assign-tenant', {
+  assignTenant: (userId: string, tenantId: string) => apiRequest<void>(`/admin/users/${userId}/assign-tenant`, {
     method: 'POST',
-    body: JSON.stringify({ userId, tenantId }),
+    body: JSON.stringify({ tenant_id: tenantId }),
   }),
-  updateRole: (userId: string, role: string) => apiRequest<void>('/admin/users/role', {
-    method: 'PUT',
-    body: JSON.stringify({ userId, role }),
+  updateRole: (userId: string, role: string) => apiRequest<void>(`/admin/users/${userId}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
   }),
 };

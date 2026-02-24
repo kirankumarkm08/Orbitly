@@ -13,7 +13,8 @@ import {
   FileText,
   MessageSquare,
   Calendar,
-  Sparkles
+  Sparkles,
+  Box
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { authApi } from '@/lib/api';
@@ -32,9 +33,19 @@ const navGroups = [
     items: [
       { name: 'Studio', href: '/admin/studio', icon: Sparkles },
       { name: 'Pages', href: '/admin/pages', icon: FileText },
+      { name: 'Blocks', href: '/admin/blocks', icon: Box },
       { name: 'Forms', href: '/admin/forms', icon: MessageSquare },
       { name: 'Events', href: '/admin/events', icon: Calendar },
       { name: 'Blog', href: '/admin/blog', icon: FileText },
+      { name: 'Modules', href: '/admin/modules', icon: FileText },
+    ]
+  },
+  {
+    name: 'Store',
+    items: [
+      { name: 'Products', href: '/admin/products', icon: Box },
+      { name: 'Categories', href: '/admin/categories', icon: Building2 },
+      { name: 'Orders', href: '/admin/orders', icon: MessageSquare },
     ]
   },
   {

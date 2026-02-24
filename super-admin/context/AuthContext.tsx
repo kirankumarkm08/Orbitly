@@ -29,10 +29,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('admin_token');
-      const storedUser = localStorage.getItem('admin_user');
-      
-      if (token && storedUser) {
-        setUser(JSON.parse(storedUser));
+      if (token) {
+        try {
+          // Validate token against backend instead of trusting localStorage
+          const data = await api.validateToken();
+          if (data.user?.role === 'super_admin') {
+            setUser(data.user);
+          } else {
+            localStorage.removeItem('admin_token');
+            localStorage.removeItem('admin_user');
+          }
+        } catch {
+          localStorage.removeItem('admin_token');
+          localStorage.removeItem('admin_user');
+        }
       }
       setIsLoading(false);
     };
@@ -42,17 +52,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (credentials: any) => {
     try {
       const data = await api.login(credentials);
-      
-      const token = data.session?.access_token || data.token;
-      
-      // Fallback if custom user profile is missing (backend issue)
-      let userData = data.user;
-      if (!userData && data.session?.user) {
-        userData = {
-          id: data.session.user.id,
-          email: data.session.user.email,
-          role: data.session.user.email === 'admin@example.com' ? 'super_admin' : 'authenticated'
-        };
+
+      const token = data.session?.access_token;
+      const userData = data.user;
+
+      if (!userData || !token) {
+        throw new Error('Login failed: no user profile returned');
+      }
+
+      // Only allow super_admin users to access the super admin panel
+      if (userData.role !== 'super_admin') {
+        throw new Error('Access denied: Super admin privileges required');
       }
 
       localStorage.setItem('admin_token', token);

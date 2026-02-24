@@ -1,79 +1,118 @@
-# MCP Server (TypeScript)
+# MCP Server (Supabase)
 
-This is a minimal MCP (Model Context Protocol) server scaffold.
+Model Context Protocol server for Supabase database operations.
 
-Quick start:
+## Quick Start
 
-- cd into `mcp-server/`
-- npm install
-- npm run dev
+```bash
+cd mcp-server
+npm install
+npm run build
+npm run dev
+```
 
-The server reads newline-delimited JSON messages on stdin and writes JSON responses on stdout.
+## Available Methods
 
-See `.vscode/mcp.json` for an example VS Code MCP configuration.
+| Method | Description |
+|--------|-------------|
+| `supabase_list` | List records from a table |
+| `supabase_get` | Get single record by ID |
+| `supabase_create` | Insert new record |
+| `supabase_update` | Update existing record |
+| `supabase_delete` | Delete record by ID |
 
-## Using a free local model (gpt4all / llama.cpp) ✅
+## Usage
 
-You can run this MCP server against a local model CLI (fully free) by configuring `MODEL_CMD_TEMPLATE` in `mcp-server/.env`.
-
-Examples (put these in `mcp-server/.env` or `mcp-server/.env.local`):
-
-- gpt4all CLI example:
-
-  MODEL_CMD_TEMPLATE=gpt4all --model ./models/gpt4all-lora.bin --prompt "{prompt}" --n_predict 128
-
-- llama.cpp example (adjust flags to your build):
-
-  MODEL_CMD_TEMPLATE=./main -m ./models/llama-2-7b.ggml.q4_0.bin -p "{prompt}" -n 128
-
-Notes:
-
-- The server replaces `{prompt}` with the incoming prompt; choose a CLI that accepts a prompt argument. If your CLI accepts stdin, you can wrap it with a small shell script that reads stdin and calls the native app.
-- If `MODEL_CMD_TEMPLATE` is not set, the server returns a stub response that you can use for testing.
-
-How to use:
-
-1. Add `MODEL_CMD_TEMPLATE` to `mcp-server/.env`.
-2. Run the server: `cd mcp-server && npm run dev`.
-3. Send an MCP `complete` request to the stdio server with `params.prompt` (or `params.input`). The server will call your local CLI and return the command output in `result.completion`.
-
-Quick test (build + one-shot request):
-
-- Build: `npm run build`
-- Send a single request (Linux/macOS):
-
-  printf '{"jsonrpc":"2.0","method":"complete","id":1,"params":{"prompt":"Hello from local model"}}\n' | node dist/index.js
-
-- On PowerShell (Windows):
-
-  echo '{"jsonrpc":"2.0","method":"complete","id":1,"params":{"prompt":"Hello from local model"}}' | node dist/index.js
-
----
-
-### Code generation: `generate_code`
-
-This server exposes a `generate_code` method that asks the model to return a JSON object with `files` (an array of `{path, language, content}`). The server will attempt to parse the model output as JSON and return `result.files`. If parsing fails, it falls back to returning a single file with the raw model output in `result.files[0]`.
-
-Example request (JSON-RPC):
-
+### List Records
+```json
 {
-"jsonrpc":"2.0",
-"method":"generate_code",
-"id":1,
-"params":{
-"prompt":"Create file `src/utils/events.ts` with exported `fetchEvents(): Promise<{title:string;date:string;}[]>` using fetch and a Jest test in `src/__tests__/events.test.ts`",
-"filename":"src/utils/events.ts",
-"language":"typescript"
+  "jsonrpc": "2.0",
+  "method": "supabase_list",
+  "id": 1,
+  "params": {
+    "table": "tenants",
+    "filters": { "niche": "static" },
+    "limit": 10
+  }
 }
+```
+
+### Get Record
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "supabase_get",
+  "id": 1,
+  "params": {
+    "table": "tenants",
+    "id": "00000000-0000-0000-0000-000000000001"
+  }
 }
+```
 
-Quick test (build + one-shot request):
+### Create Record
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "supabase_create",
+  "id": 1,
+  "params": {
+    "table": "tenants",
+    "record": {
+      "name": "New Tenant",
+      "slug": "new-tenant",
+      "niche": "ecommerce"
+    }
+  }
+}
+```
 
-- Build: `npm run build`
-- Send a single request (Linux/macOS):
+### Update Record
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "supabase_update",
+  "id": 1,
+  "params": {
+    "table": "tenants",
+    "id": "00000000-0000-0000-0000-000000000001",
+    "record": { "name": "Updated Name" }
+  }
+}
+```
 
-  printf '{"jsonrpc":"2.0","method":"generate_code","id":1,"params":{"prompt":"Write a TypeScript hello world file","filename":"hello.ts","language":"typescript"}}\n' | node dist/index.js
+### Delete Record
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "supabase_delete",
+  "id": 1,
+  "params": {
+    "table": "tenants",
+    "id": "00000000-0000-0000-0000-000000000001"
+  }
+}
+```
 
-- On PowerShell (Windows):
+## VS Code Integration
 
-  echo '{"jsonrpc":"2.0","method":"generate_code","id":1,"params":{"prompt":"Write a TypeScript hello world file","filename":"hello.ts","language":"typescript"}}' | node dist/index.js
+The MCP server is configured in `.vscode/mcp.json`. After making changes:
+
+1. Restart VS Code
+2. Or run "Developer: Reload Window"
+
+## Test Tables
+
+- `tenants` - Tenant/workspace records
+- `users` - User profiles
+- `pages` - Page builder pages
+- `assets` - Uploaded files
+- `page_templates` - Page templates
+
+## Environment
+
+The server loads Supabase credentials from:
+1. `mcp-server/.env`
+2. Root `.env` file
+
+Make sure `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are set.

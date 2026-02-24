@@ -9,6 +9,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "setup:admin": "ts-node src/setup-admin.ts",
+    "seed": "ts-node src/seed-test-data.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -20,8 +21,10 @@
     "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "express-validator": "^7.3.1",
+    "groq-sdk": "^0.37.0",
     "helmet": "^8.1.0",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "stripe": "^20.3.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",

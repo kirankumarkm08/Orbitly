@@ -18,6 +18,10 @@ app.use(cors({
   origin: ['http://localhost:3000', 'http://localhost:3001', process.env.CORS_ORIGIN].filter(Boolean) as string[],
   credentials: true,
 }));
+
+// Use raw body for Stripe webhooks
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 

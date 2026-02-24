@@ -37,6 +37,35 @@ router.post('/login', asyncHandler(async (req: Request, res: Response) => {
   });
 }));
 
+// GET /api/auth/me - Validate token and return current user
+router.get('/me', asyncHandler(async (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Missing or invalid authorization header' });
+  }
+
+  const token = authHeader.split(' ')[1];
+
+  const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+
+  if (error || !user) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  const { data: userProfile } = await supabaseAdmin
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (!userProfile) {
+    return res.status(401).json({ error: 'User profile not found' });
+  }
+
+  res.json({ user: userProfile });
+}));
+
 // POST /api/auth/register - Register new user
 router.post('/register', asyncHandler(async (req: Request, res: Response) => {
   const { email, password, full_name } = req.body;

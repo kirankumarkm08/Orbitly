@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import grapesjs, { Editor } from 'grapesjs';
 import 'grapesjs/dist/css/grapes.min.css';
 
@@ -19,13 +19,29 @@ export interface GrapesEditorProps {
   onSave?: (data: PageData) => void;
 }
 
-export default function GrapesEditor({ initialContent, onSave }: GrapesEditorProps) {
+export interface GrapesEditorHandle {
+  insertBlock: (html: string, css?: string) => void;
+}
+
+const GrapesEditor = forwardRef<GrapesEditorHandle, GrapesEditorProps>(function GrapesEditor({ initialContent, onSave }, ref) {
   const editorRef = useRef<Editor | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const onSaveRef = useRef(onSave);
   
   // Keep the ref up to date
   onSaveRef.current = onSave;
+
+  // Expose editor methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    insertBlock: (html: string, css?: string) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.addComponents(html);
+      if (css) {
+        editor.CssComposer.addRules(css);
+      }
+    },
+  }));
 
   useEffect(() => {
     if (!containerRef.current || editorRef.current) return;
@@ -134,6 +150,28 @@ export default function GrapesEditor({ initialContent, onSave }: GrapesEditorPro
       `,
     });
 
+    // TinyMCE Rich Text Block
+    bm.add('tinymce-text', {
+      label: 'Rich Text (MCE)',
+      category: 'Content',
+      content: `
+        <div class="rich-text-block" style="padding: 32px; background: white; border-radius: 12px; font-family: 'Inter', sans-serif;">
+          <h2 style="font-size: 28px; font-weight: 700; color: #1f2937; margin-bottom: 16px;">Enter your heading here</h2>
+          <p style="font-size: 16px; line-height: 1.7; color: #4b5563; margin-bottom: 16px;">
+            This is a rich text block powered by TinyMCE editor. Click to edit this content and format it with the toolbar above. You can add <strong>bold</strong>, <em>italic</em>, <u>underlined</u> text, lists, links, and more.
+          </p>
+          <ul style="list-style: disc; padding-left: 24px; color: #4b5563; margin-bottom: 16px;">
+            <li style="margin-bottom: 8px;">First feature or benefit point</li>
+            <li style="margin-bottom: 8px;">Second feature or benefit point</li>
+            <li style="margin-bottom: 8px;">Third feature or benefit point</li>
+          </ul>
+          <p style="font-size: 16px; line-height: 1.7; color: #4b5563;">
+            Create engaging content that converts visitors into customers.
+          </p>
+        </div>
+      `,
+    });
+
     // Hero Section Block
     bm.add('hero-section', {
       label: 'Hero Section',
@@ -176,4 +214,6 @@ export default function GrapesEditor({ initialContent, onSave }: GrapesEditorPro
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div ref={containerRef} className="h-full border-t border-gray-200" />;
-}
+});
+
+export default GrapesEditor;

@@ -1,12 +1,45 @@
 import * as readline from "readline";
-import { exec } from "child_process";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import * as path from "path";
+import * as fs from "fs";
 import dotenv from "dotenv";
 
-// Load .env.local first (if present), then fallback to .env
-dotenv.config({ path: ".env.local" });
-dotenv.config();
+// Try multiple paths for .env file
+const envPaths = [
+  path.resolve(process.cwd(), "../../.env"),
+  path.resolve(process.cwd(), "../.env"),
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(process.cwd(), "../.env.local"),
+];
 
-const MODEL_CMD_TEMPLATE = process.env.MODEL_CMD_TEMPLATE ?? "";
+for (const envPath of envPaths) {
+  if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+  }
+}
+
+// Fallback to hardcoded values if not loaded
+if (!process.env.SUPABASE_URL) {
+  process.env.SUPABASE_URL = "https://lgnxrkfssxusqzqlkoal.supabase.co";
+}
+if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxnbnhya2Zzc3h1c3F6cWxrb2FsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MDU2MjgzNCwiZXhwIjoyMDg2MTM4ODM0fQ.YqesnNRIwf-PRpouoNnrvxaI54nxVLl5bGX9m4fSLsM";
+}
+
+let supabase: SupabaseClient | null = null;
+
+function getSupabaseClient(): SupabaseClient {
+  if (supabase) return supabase;
+
+  const supabaseUrl = process.env.SUPABASE_URL!;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+  supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
+  
+  return supabase;
+}
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -14,159 +47,162 @@ const rl = readline.createInterface({
   terminal: false,
 });
 
-// Announce readiness (optional) so hosts can detect the server
-process.stdout.write(
-  JSON.stringify({
-    jsonrpc: "2.0",
-    method: "ready",
-    params: { message: "mcp-server started" },
-  }) + "\n",
-);
+console.error("supabase-mcp-server started");
 
-function escapePromptForShell(prompt: string) {
-  // Basic escaping for shell replacement; for complicated cases use a wrapper script
-  return prompt.replace(/(["\\`$])/g, "\\$1");
+function sendResponse(id: any, result: any) {
+  process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id, result }) + "\n");
 }
 
-function runModel(prompt: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    if (!MODEL_CMD_TEMPLATE) {
-      // Stub response when no model CLI configured
-      resolve(
-        "[stub] No MODEL_CMD_TEMPLATE configured. Set MODEL_CMD_TEMPLATE in .env to call a local model CLI.",
-      );
-      return;
-    }
-
-    const safePrompt = escapePromptForShell(prompt);
-    const cmd = MODEL_CMD_TEMPLATE.replace(/\{prompt\}/g, safePrompt);
-
-    exec(
-      cmd,
-      { maxBuffer: 10 * 1024 * 1024 },
-      (err: Error | null, stdout: string, stderr: string) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-        resolve((stdout || stderr || "").toString().trim());
-      },
-    );
-  });
+function sendError(id: any, message: string, code: number = -32000) {
+  process.stdout.write(JSON.stringify({ jsonrpc: "2.0", id, error: { code, message } }) + "\n");
 }
 
 rl.on("line", async (line) => {
   try {
-    const msg = JSON.parse(line);
+    const cleanLine = line.replace(/^\uFEFF/, '');
+    const msg = JSON.parse(cleanLine);
 
-    if (msg && msg.method) {
-      // Initialize handshake
-      if (msg.method === "initialize") {
-        const resp = {
-          jsonrpc: "2.0",
-          id: msg.id ?? 1,
-          result: { capabilities: { methods: ["complete", "generate_code"] } },
-        };
-        process.stdout.write(JSON.stringify(resp) + "\n");
-        return;
-      }
+    if (!msg || !msg.method) return;
 
-      // Complete method: call local model CLI and return result
-      if (msg.method === "complete") {
-        const prompt: string = msg.params?.prompt ?? msg.params?.input ?? "";
-        try {
-          const out = await runModel(prompt);
-          const resp = {
-            jsonrpc: "2.0",
-            id: msg.id ?? null,
-            result: { completion: out },
-          };
-          process.stdout.write(JSON.stringify(resp) + "\n");
-        } catch (err: any) {
-          const resp = {
-            jsonrpc: "2.0",
-            id: msg.id ?? null,
-            error: { code: -32000, message: err?.message ?? String(err) },
-          };
-          process.stdout.write(JSON.stringify(resp) + "\n");
-        }
+    const id = msg.id ?? null;
 
-        return;
-      }
-
-      // generate_code method: ask the model to return JSON with files array and parse it
-      if (msg.method === "generate_code") {
-        const prompt: string = msg.params?.prompt ?? "";
-        const filename: string | undefined = msg.params?.filename;
-        const language: string | undefined = msg.params?.language;
-
-        // Wrap the user's prompt with instructions asking for JSON output
-        const wrapper = `You are a precise code generator. Respond with a single JSON object with a top-level field \"files\" which is an array. Each file must be an object with \"path\" (relative path), \"language\" (e.g., typescript, js, python), and \"content\" (string). Only output the JSON object, nothing else.\n\nUser prompt:\n${prompt}`;
-
-        try {
-          const out = await runModel(wrapper);
-
-          // Try to extract JSON from the model output
-          function extractJSON(s: string): any | null {
-            const start = s.indexOf("{");
-            const end = s.lastIndexOf("}");
-            if (start === -1 || end === -1 || end <= start) return null;
-            const candidate = s.slice(start, end + 1);
-            try {
-              return JSON.parse(candidate);
-            } catch (e) {
-              return null;
-            }
-          }
-
-          const parsed = extractJSON(out);
-
-          if (parsed && Array.isArray(parsed.files)) {
-            const resp = {
-              jsonrpc: "2.0",
-              id: msg.id ?? null,
-              result: { files: parsed.files },
-            };
-            process.stdout.write(JSON.stringify(resp) + "\n");
-          } else {
-            // Fallback: return raw output as a single file
-            const single = {
-              path: filename ?? "output.txt",
-              language: language ?? "text",
-              content: out,
-            };
-            const resp = {
-              jsonrpc: "2.0",
-              id: msg.id ?? null,
-              result: { files: [single], raw: out },
-            };
-            process.stdout.write(JSON.stringify(resp) + "\n");
-          }
-        } catch (err: any) {
-          const resp = {
-            jsonrpc: "2.0",
-            id: msg.id ?? null,
-            error: { code: -32000, message: err?.message ?? String(err) },
-          };
-          process.stdout.write(JSON.stringify(resp) + "\n");
-        }
-
-        return;
-      }
-
-      // Echo any other requests
+    if (msg.method === "initialize") {
       const resp = {
         jsonrpc: "2.0",
-        id: msg.id ?? null,
-        result: { echo: msg },
+        id,
+        result: {
+          capabilities: {
+            methods: [
+              "supabase_list",
+              "supabase_get",
+              "supabase_create",
+              "supabase_update",
+              "supabase_delete",
+            ],
+          },
+        },
       };
       process.stdout.write(JSON.stringify(resp) + "\n");
+      return;
     }
+
+    const sb = getSupabaseClient();
+
+    // List records from a table
+    if (msg.method === "supabase_list") {
+      const table: string = msg.params?.table || "";
+      const filters = msg.params?.filters || {};
+      const limit = msg.params?.limit || 50;
+
+      if (!table) {
+        sendError(id, "Table name is required");
+        return;
+      }
+
+      try {
+        let query = sb.from(table).select("*").limit(limit);
+        
+        for (const [key, value] of Object.entries(filters)) {
+          query = query.eq(key, value);
+        }
+
+        const { data, error } = await query;
+        
+        if (error) throw error;
+        sendResponse(id, { data, count: data?.length || 0 });
+      } catch (err: any) {
+        sendError(id, err?.message || String(err));
+      }
+      return;
+    }
+
+    // Get single record
+    if (msg.method === "supabase_get") {
+      const table: string = msg.params?.table || "";
+      const id: string = msg.params?.id || "";
+
+      if (!table || !id) {
+        sendError(id, "Table and id are required");
+        return;
+      }
+
+      try {
+        const { data, error } = await sb.from(table).select("*").eq("id", id).single();
+        
+        if (error) throw error;
+        sendResponse(id, { data });
+      } catch (err: any) {
+        sendError(id, err?.message || String(err));
+      }
+      return;
+    }
+
+    // Create record
+    if (msg.method === "supabase_create") {
+      const table: string = msg.params?.table || "";
+      const record: object = msg.params?.record || {};
+
+      if (!table || !Object.keys(record).length) {
+        sendError(id, "Table name and record object are required");
+        return;
+      }
+
+      try {
+        const { data, error } = await sb.from(table).insert(record).select().single();
+
+        if (error) throw error;
+        sendResponse(id, { inserted: data });
+      } catch (err: any) {
+        sendError(id, err?.message || String(err));
+      }
+      return;
+    }
+
+    // Update record
+    if (msg.method === "supabase_update") {
+      const table: string = msg.params?.table || "";
+      const record: object = msg.params?.record || {};
+      const id: string = msg.params?.id || "";
+
+      if (!table || !id || !Object.keys(record).length) {
+        sendError(id, "Table, id, and record are required");
+        return;
+      }
+
+      try {
+        const { data, error } = await sb.from(table).update(record).eq("id", id).select().single();
+
+        if (error) throw error;
+        sendResponse(id, { updated: data });
+      } catch (err: any) {
+        sendError(id, err?.message || String(err));
+      }
+      return;
+    }
+
+    // Delete record
+    if (msg.method === "supabase_delete") {
+      const table: string = msg.params?.table || "";
+      const id: string = msg.params?.id || "";
+
+      if (!table || !id) {
+        sendError(id, "Table and id are required");
+        return;
+      }
+
+      try {
+        const { data, error } = await sb.from(table).delete().eq("id", id).select().single();
+
+        if (error) throw error;
+        sendResponse(id, { deleted: data });
+      } catch (err: any) {
+        sendError(id, err?.message || String(err));
+      }
+      return;
+    }
+
+    sendResponse(id, { echo: msg, message: "Method not implemented" });
   } catch (err) {
-    const errMsg = {
-      jsonrpc: "2.0",
-      error: { code: -32700, message: "Parse error" },
-    };
-    process.stdout.write(JSON.stringify(errMsg) + "\n");
+    process.stdout.write(JSON.stringify({ jsonrpc: "2.0", error: { code: -32700, message: "Parse error" } }) + "\n");
   }
 });

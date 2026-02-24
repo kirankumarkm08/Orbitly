@@ -1,15 +1,17 @@
 'use client';
 
-import { useState, useCallback, useEffect, Suspense } from 'react';
+import { useState, useCallback, useEffect, Suspense, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { Loader2, Save, Eye, Settings, Image as ImageIcon, Globe, FileText, Bug } from 'lucide-react';
+import { Loader2, Save, Eye, Settings, Image as ImageIcon, Globe, FileText, Bug, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Label } from '@/components/ui/Label';
 import { Badge } from '@/components/ui/Badge';
 import { pagesApi, authApi } from '@/lib/api';
 import { toast } from 'sonner';
+import AIBlockGenerator from '@/components/page-builder/AIBlockGenerator';
+import type { GrapesEditorHandle } from '@/components/page-builder/GrapesEditor';
 
 const GrapesEditor = dynamic(
   () => import('@/components/page-builder/GrapesEditor'),
@@ -64,6 +66,8 @@ function StudioPageContent() {
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [editorData, setEditorData] = useState<PageData>({ html: '', css: '' });
   const [initialContent, setInitialContent] = useState<PageData | undefined>(undefined);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const editorComponentRef = useRef<GrapesEditorHandle>(null);
   
   // Page metadata state
   const [metadata, setMetadata] = useState<PageMetadata>({
@@ -331,6 +335,17 @@ function StudioPageContent() {
             <Bug className="h-4 w-4" />
           </Button>
           
+          {/* AI Generate */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAIGenerator(true)}
+            className="gap-1 bg-gradient-to-r from-purple-500/10 to-primary/10 border-purple-500/30 hover:from-purple-500/20 hover:to-primary/20"
+          >
+            <Sparkles className="h-4 w-4 text-purple-500" />
+            <span className="text-purple-600 dark:text-purple-400">AI Generate</span>
+          </Button>
+          
           {/* Settings Toggle */}
           <Button
             variant="outline"
@@ -371,6 +386,7 @@ function StudioPageContent() {
         {/* Editor */}
         <div className={`flex-1 transition-all ${showSettings || showDebug ? 'mr-80' : ''}`}>
           <GrapesEditor 
+            ref={editorComponentRef}
             initialContent={initialContent}
             onSave={handleEditorChange}
           />
@@ -517,6 +533,15 @@ function StudioPageContent() {
           </div>
         )}
       </div>
+
+      {/* AI Block Generator Modal */}
+      <AIBlockGenerator
+        isOpen={showAIGenerator}
+        onClose={() => setShowAIGenerator(false)}
+        onInsert={(block) => {
+          editorComponentRef.current?.insertBlock(block.html, block.css);
+        }}
+      />
     </div>
   );
 }
