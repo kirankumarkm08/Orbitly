@@ -146,7 +146,7 @@ export default function ProductForm({ initialData, onSubmit, onCancel, title }: 
           {/* Tabs Navigation */}
           <div className="flex gap-1 p-1 bg-muted rounded-xl w-fit">
             <Button 
-              variant={activeTab === 'basic' ? 'primary' : 'ghost'} 
+              variant={activeTab === 'basic' ? 'default' : 'ghost'} 
               size="sm" 
               onClick={() => setActiveTab('basic')}
               type="button"
@@ -154,7 +154,7 @@ export default function ProductForm({ initialData, onSubmit, onCancel, title }: 
               Basic Info
             </Button>
             <Button 
-              variant={activeTab === 'variants' ? 'primary' : 'ghost'} 
+              variant={activeTab === 'variants' ? 'default' : 'ghost'} 
               size="sm" 
               onClick={() => setActiveTab('variants')}
               type="button"
@@ -162,7 +162,7 @@ export default function ProductForm({ initialData, onSubmit, onCancel, title }: 
               Variants
             </Button>
             <Button 
-              variant={activeTab === 'seo' ? 'primary' : 'ghost'} 
+              variant={activeTab === 'seo' ? 'default' : 'ghost'} 
               size="sm" 
               onClick={() => setActiveTab('seo')}
               type="button"

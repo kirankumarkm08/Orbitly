@@ -2,26 +2,25 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Plus, Edit2, Trash2, MoreVertical, CheckCircle2, Clock, Eye, FileText } from 'lucide-react';
+import { Plus, Edit2, Trash2, MoreVertical, CheckCircle2, Clock, Eye, FileText, User, Tag } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { Badge } from '@/components/ui/Badge';
 import { Modal, ModalContent, ModalDescription, ModalHeader, ModalTitle } from '@/components/ui/Modal';
 import { cn } from '@/lib/utils';
 import { useForm } from 'react-hook-form';
-import { useRouter as useNextRouter } from 'next/router';
 import { Editor, EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { supabase } from '@/lib/supabase';
-import { useSession } from '@/lib/auth';
+import { getSupabaseClient } from '@/lib/supabase/client';
 
 interface BlogPost {
   id: string;
   title: string;
   slug: string;
+  content: string;
   author_id: string;
   excerpt: string;
   featured_image_url: string;
@@ -96,13 +95,23 @@ export default function BlogManagement() {
   const [showModal, setShowModal] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
   const [previewContent, setPreviewContent] = useState('');
+  const [accessToken, setAccessToken] = useState<string | null>(null);
   const router = useRouter();
-  const session = useSession();
+
+  useEffect(() => {
+    const getSession = async () => {
+      const supabase = getSupabaseClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      setAccessToken(session?.access_token || null);
+    };
+    getSession();
+  }, []);
 
   const {
     register,
     handleSubmit,
     reset,
+    setValue,
     formState: { errors, isSubmitting }
   } = useForm<FormData>();
 
@@ -126,7 +135,7 @@ export default function BlogManagement() {
       const response = await fetch(`/api/blog-posts?page=${page}`, {
         headers: {
           'Content-Type': 'application/json',
-          ...session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }
+          ...accessToken && { Authorization: `Bearer ${accessToken}` }
         }
       });
 
@@ -152,7 +161,7 @@ export default function BlogManagement() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }
+          ...accessToken && { Authorization: `Bearer ${accessToken}` }
         },
         body: JSON.stringify(data)
       });
@@ -181,7 +190,7 @@ export default function BlogManagement() {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          ...session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }
+          ...accessToken && { Authorization: `Bearer ${accessToken}` }
         },
         body: JSON.stringify(data)
       });
@@ -209,7 +218,7 @@ export default function BlogManagement() {
       const response = await fetch(`/api/blog-posts/${postId}`, {
         method: 'DELETE',
         headers: {
-          ...session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }
+          ...accessToken && { Authorization: `Bearer ${accessToken}` }
         }
       });
 
@@ -230,7 +239,7 @@ export default function BlogManagement() {
       const response = await fetch(`/api/blog-posts/${postId}/publish`, {
         method: 'POST',
         headers: {
-          ...session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }
+          ...accessToken && { Authorization: `Bearer ${accessToken}` }
         }
       });
 
@@ -251,7 +260,7 @@ export default function BlogManagement() {
       const response = await fetch(`/api/blog-posts/${postId}/unpublish`, {
         method: 'POST',
         headers: {
-          ...session?.accessToken && { Authorization: `Bearer ${session.accessToken}` }
+          ...accessToken && { Authorization: `Bearer ${accessToken}` }
         }
       });
 
@@ -281,14 +290,14 @@ export default function BlogManagement() {
       status: post.status,
       meta_title: post.meta_title,
       meta_description: post.meta_description,
-      meta_keywords: post.meta_keywords,
+      meta_keywords: post.meta_keywords || [],
       og_image_url: post.og_image_url,
       og_title: post.og_title,
       og_description: post.og_description,
       twitter_card_type: post.twitter_card_type,
       is_featured: post.is_featured,
       category: post.category,
-      tags: post.tags.join(', ')
+      tags: post.tags || []
     });
 
     editor.commands.setContent(post.content);
@@ -367,9 +376,8 @@ export default function BlogManagement() {
         <Select
           value={statusFilter}
           onValueChange={(value) => setStatusFilter(value as string)}
-          className="bg-muted border-border h-12"
         >
-          <SelectTrigger>
+          <SelectTrigger className="bg-muted border-border h-12">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -383,9 +391,8 @@ export default function BlogManagement() {
         <Select
           value={categoryFilter}
           onValueChange={(value) => setCategoryFilter(value as string)}
-          className="bg-muted border-border h-12"
         >
-          <SelectTrigger>
+          <SelectTrigger className="bg-muted border-border h-12">
             <SelectValue placeholder="Filter by category" />
           </SelectTrigger>
           <SelectContent>
@@ -571,11 +578,10 @@ export default function BlogManagement() {
                 <Select
                   value={selectedPost?.status || 'draft'}
                   onValueChange={(value) => {
-                    register('status').onChange(value);
+                    setValue('status', value as FormData['status']);
                   }}
-                  className="bg-muted border-border h-12"
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-muted border-border h-12">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -590,11 +596,10 @@ export default function BlogManagement() {
                 <Select
                   value={selectedPost?.twitter_card_type || 'summary_large_image'}
                   onValueChange={(value) => {
-                    register('twitter_card_type').onChange(value);
+                    setValue('twitter_card_type', value);
                   }}
-                  className="bg-muted border-border h-12"
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-muted border-border h-12">
                     <SelectValue placeholder="Select Twitter card type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -678,7 +683,7 @@ export default function BlogManagement() {
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-sm font-medium text-foreground">Content</div>
                   <div className="text-sm text-muted-foreground">
-                    {editor.getDoc().toString().length} characters
+                    {editor.getText().length} characters
                   </div>
                 </div>
                 <div className="rounded-xl border border-border bg-muted">
@@ -722,10 +727,3 @@ export default function BlogManagement() {
     </div>
   );
 }
-
-// Add a custom command to handle form submission
-Editor.DefaultOptions.commands.handleFormSubmit = (editor, event) => {
-  event.preventDefault();
-  // Handle form submission logic if needed
-  return false;
-};

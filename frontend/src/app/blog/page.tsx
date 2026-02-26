@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'Blog',
@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 
 export default async function BlogPage() {
   try {
+    const supabase = await createClient();
     const { data: posts, error } = await supabase
       .from('blog_posts')
       .select(`
@@ -26,6 +27,19 @@ export default async function BlogPage() {
       .eq('status', 'published')
       .order('published_at', { ascending: false })
       .limit(20);
+
+    const typedPosts = (posts as unknown as Array<{
+      id: string;
+      title: string;
+      slug: string;
+      excerpt: string;
+      featured_image_url: string;
+      published_at: string;
+      view_count: number;
+      category: string;
+      tags: string[];
+      author: { id: string; email: string; name: string } | null;
+    }> | null) || [];
 
     if (error) {
       console.error('Error fetching blog posts:', error);
@@ -53,9 +67,9 @@ export default async function BlogPage() {
           </div>
 
           {/* Posts Grid */}
-          {posts && posts.length > 0 ? (
+          {typedPosts && typedPosts.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {posts.map((post) => (
+              {typedPosts.map((post) => (
                 <Link
                   key={post.id}
                   href={`/blog/${post.slug}`}

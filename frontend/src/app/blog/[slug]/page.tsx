@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabase/server';
+import { createClient } from '@/lib/supabase/server';
 
 interface BlogPostPageProps {
   params: {
@@ -10,6 +10,7 @@ interface BlogPostPageProps {
 
 export async function generateMetadata({ params }: BlogPostPageProps): Promise<Metadata> {
   try {
+    const supabase = await createClient();
     const { data: post, error } = await supabase
       .from('blog_posts')
       .select('meta_title, meta_description, og_title, og_description, og_image_url, title, excerpt, featured_image_url')
@@ -49,6 +50,7 @@ export async function generateMetadata({ params }: BlogPostPageProps): Promise<M
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
   try {
+    const supabase = await createClient();
     const { data: post, error } = await supabase
       .from('blog_posts')
       .select(`
@@ -63,11 +65,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
       notFound();
     }
 
+    const typedPost = post as typeof post & { tags: string[] };
+
     // Increment view count
     await supabase
       .from('blog_posts')
-      .update({ view_count: post.view_count + 1 })
-      .eq('id', post.id);
+      .update({ view_count: (typedPost.view_count || 0) + 1 })
+      .eq('id', typedPost.id);
 
     return (
       <div className="min-h-screen bg-background">
@@ -76,17 +80,17 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             {/* Header */}
             <header className="mb-12">
               {/* Category */}
-              {post.category && (
+              {typedPost.category && (
                 <div className="mb-4">
                   <span className="inline-block px-3 py-1 text-sm font-medium text-primary bg-primary/10 rounded-full">
-                    {post.category}
+                    {typedPost.category}
                   </span>
                 </div>
               )}
 
               {/* Title */}
               <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                {post.title}
+                {typedPost.title}
               </h1>
 
               {/* Meta */}
@@ -94,13 +98,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 {/* Author */}
                 <div className="flex items-center gap-2">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
-                    {post.author?.name?.charAt(0) || post.author?.email?.charAt(0) || 'A'}
+                    {typedPost.author?.name?.charAt(0) || post.author?.email?.charAt(0) || 'A'}
                   </div>
-                  <span>{post.author?.name || post.author?.email || 'Anonymous'}</span>
+                  <span>{typedPost.author?.name || post.author?.email || 'Anonymous'}</span>
                 </div>
 
                 {/* Date */}
-                {post.published_at && (
+                {typedPost.published_at && (
                   <div className="flex items-center gap-1">
                     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -127,27 +131,27 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                   </svg>
-                  <span>{post.view_count.toLocaleString()} views</span>
+                  <span>{typedPost.view_count.toLocaleString()} views</span>
                 </div>
               </div>
             </header>
 
             {/* Featured Image */}
-            {post.featured_image_url && (
+            {typedPost.featured_image_url && (
               <div className="mb-12">
                 <img
-                  src={post.featured_image_url}
-                  alt={post.title}
+                  src={typedPost.featured_image_url}
+                  alt={typedPost.title}
                   className="w-full h-auto rounded-lg"
                 />
               </div>
             )}
 
             {/* Excerpt */}
-            {post.excerpt && (
+            {typedPost.excerpt && (
               <div className="mb-12">
                 <p className="text-xl text-muted-foreground leading-relaxed">
-                  {post.excerpt}
+                  {typedPost.excerpt}
                 </p>
               </div>
             )}
@@ -159,10 +163,10 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             />
 
             {/* Tags */}
-            {post.tags && post.tags.length > 0 && (
+            {typedPost.tags && typedPost.tags.length > 0 && (
               <div className="mb-12">
                 <div className="flex flex-wrap gap-2">
-                  {post.tags.map((tag, index) => (
+                  {typedPost.tags.map((tag: string, index: number) => (
                     <span
                       key={index}
                       className="inline-block px-3 py-1 text-sm text-muted-foreground bg-muted rounded-full hover:bg-primary/10 hover:text-primary transition-colors"

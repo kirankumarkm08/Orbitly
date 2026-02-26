@@ -406,8 +406,8 @@ export default function PaymentsManagement() {
                     <Users className="h-4 w-4 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs text-muted-foreground">Total Orders <p className="text-sm font</p>
-                   -bold text-foreground">{summary?.totalOrders || 0}</p>
+                    <p className="text-xs text-muted-foreground">Total Orders</p>
+                    <p className="text-sm font-bold text-foreground">{summary?.totalOrders || 0}</p>
                   </div>
                   <span className="text-[10px] text-primary font-medium">all</span>
                 </div>

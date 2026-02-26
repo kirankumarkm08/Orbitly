@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Badge } from '@/components/ui/Badge';
 import { Trash2, Plus, GripVertical, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { ProductVariant } from '@/types';
 
 interface Option {
@@ -118,7 +119,7 @@ export default function VariantEditor({ variants, onChange, basePrice }: Variant
         </div>
         <div className="flex items-center gap-2">
            <Button 
-            variant={useVariants ? "primary" : "outline"} 
+            variant={useVariants ? "default" : "outline"} 
             size="sm" 
             onClick={() => {
               setUseVariants(!useVariants);
